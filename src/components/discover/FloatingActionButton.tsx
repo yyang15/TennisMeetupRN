@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, shadows, spacing } from '../../theme';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 
@@ -10,14 +11,17 @@ interface FloatingActionButtonProps {
 
 export function FloatingActionButton({ onPress }: FloatingActionButtonProps) {
   const { animatedStyle, handlePressIn, handlePressOut } = useAnimatedPress(0.9);
+  const insets = useSafeAreaInsets();
 
   return (
-    <Animated.View style={[styles.fabWrapper, animatedStyle]}>
+    <Animated.View style={[styles.fabWrapper, animatedStyle, { bottom: Math.max(insets.bottom, spacing.base) + spacing.base }]}>
       <Pressable
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={[styles.fab, shadows.accent]}
+        accessibilityLabel="Create session"
+        accessibilityRole="button"
       >
         <Ionicons name="add" size={28} color={colors.bg} />
       </Pressable>
@@ -28,7 +32,6 @@ export function FloatingActionButton({ onPress }: FloatingActionButtonProps) {
 const styles = StyleSheet.create({
   fabWrapper: {
     position: 'absolute',
-    bottom: spacing.xxl,
     right: spacing.base,
   },
   fab: {

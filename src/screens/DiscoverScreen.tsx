@@ -3,12 +3,13 @@ import {
   View,
   FlatList,
   StyleSheet,
-  Alert,
   Text,
   ListRenderItem,
+  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography } from '../theme';
 import { TopBar } from '../components/discover/TopBar';
 import { FilterChips } from '../components/discover/FilterChips';
@@ -20,11 +21,17 @@ import {
   FilterOption,
   Session,
 } from '../data/mockSessions';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 
-export function DiscoverScreen() {
+type Props = NativeStackScreenProps<RootStackParamList, 'Discover'>;
+
+function ItemSeparator() {
+  return <View style={styles.separator} />;
+}
+
+export function DiscoverScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState<FilterOption>('All');
-  const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>();
 
   const filteredSessions = useMemo(() => {
     if (activeFilter === 'All') return mockSessions;
@@ -32,6 +39,13 @@ export function DiscoverScreen() {
       (s) => s.sessionType === activeFilter.toLowerCase()
     );
   }, [activeFilter]);
+
+  const handleCardPress = useCallback(
+    (session: Session) => {
+      navigation.navigate('SessionDetail', { sessionId: session.id });
+    },
+    [navigation]
+  );
 
   const handleJoin = useCallback((id: string) => {
     const session = mockSessions.find((s) => s.id === id);
@@ -54,10 +68,14 @@ export function DiscoverScreen() {
   const renderSessionCard: ListRenderItem<Session> = useCallback(
     ({ item }) => (
       <View style={styles.cardWrapper}>
-        <SessionCard session={item} onJoin={handleJoin} />
+        <SessionCard
+          session={item}
+          onJoin={handleJoin}
+          onPress={() => handleCardPress(item)}
+        />
       </View>
     ),
-    [handleJoin]
+    [handleJoin, handleCardPress]
   );
 
   const keyExtractor = useCallback((item: Session) => item.id, []);
@@ -65,22 +83,19 @@ export function DiscoverScreen() {
   const ListHeader = useMemo(
     () => (
       <>
-        {/* Map */}
-        <MapView sessions={filteredSessions} selectedSessionId={selectedSessionId} />
+        <MapView sessions={filteredSessions} />
 
-        {/* Filter chips */}
         <View style={styles.filterSection}>
           <FilterChips activeFilter={activeFilter} onFilterChange={setActiveFilter} />
         </View>
 
-        {/* Section header */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Nearby Sessions</Text>
           <Text style={styles.sectionCount}>{filteredSessions.length} available</Text>
         </View>
       </>
     ),
-    [filteredSessions, selectedSessionId, activeFilter]
+    [filteredSessions, activeFilter]
   );
 
   const ListEmpty = useMemo(
@@ -108,8 +123,11 @@ export function DiscoverScreen() {
         keyExtractor={keyExtractor}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmpty}
-        contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: insets.bottom + 100 },
+        ]}
+        ItemSeparatorComponent={ItemSeparator}
         showsVerticalScrollIndicator={false}
       />
 
@@ -124,7 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   listContent: {
-    paddingBottom: 100,
+    // paddingBottom set dynamically above
   },
   filterSection: {
     paddingVertical: spacing.base,

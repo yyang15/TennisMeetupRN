@@ -1,13 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { colors, radius, typography } from '../theme';
+import { colors } from '../theme';
 
 type AvatarSize = 'sm' | 'md' | 'lg';
 
 interface AvatarProps {
   name: string;
   size?: AvatarSize;
-  imageUrl?: string;
   style?: ViewStyle;
 }
 
@@ -24,8 +23,10 @@ const fontSizeMap: Record<AvatarSize, number> = {
 };
 
 function getInitials(name: string): string {
+  if (!name || !name.trim()) return '?';
   return name
     .split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .toUpperCase()
@@ -43,7 +44,7 @@ function getAvatarColor(name: string): string {
 
 export function Avatar({ name, size = 'md', style }: AvatarProps) {
   const dim = sizeMap[size];
-  const bgColor = getAvatarColor(name);
+  const bgColor = getAvatarColor(name || '?');
 
   return (
     <View
@@ -57,6 +58,7 @@ export function Avatar({ name, size = 'md', style }: AvatarProps) {
         },
         style,
       ]}
+      accessibilityLabel={name || 'Unknown user'}
     >
       <Text style={[styles.text, { fontSize: fontSizeMap[size] }]}>
         {getInitials(name)}

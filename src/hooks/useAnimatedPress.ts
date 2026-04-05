@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { Animated } from 'react-native';
 
 /**
@@ -7,26 +7,43 @@ import { Animated } from 'react-native';
  */
 export function useAnimatedPress(toValue = 0.97) {
   const scale = useRef(new Animated.Value(1)).current;
+  const activeAnimation = useRef<Animated.CompositeAnimation | null>(null);
 
   const handlePressIn = useCallback(() => {
-    Animated.spring(scale, {
+    activeAnimation.current?.stop();
+    const anim = Animated.spring(scale, {
       toValue,
       useNativeDriver: true,
       speed: 50,
       bounciness: 4,
-    }).start();
+    });
+    activeAnimation.current = anim;
+    anim.start(() => {
+      activeAnimation.current = null;
+    });
   }, [scale, toValue]);
 
   const handlePressOut = useCallback(() => {
-    Animated.spring(scale, {
+    activeAnimation.current?.stop();
+    const anim = Animated.spring(scale, {
       toValue: 1,
       useNativeDriver: true,
       speed: 40,
       bounciness: 6,
-    }).start();
+    });
+    activeAnimation.current = anim;
+    anim.start(() => {
+      activeAnimation.current = null;
+    });
   }, [scale]);
 
-  const animatedStyle = { transform: [{ scale }] };
+  useEffect(() => {
+    return () => {
+      activeAnimation.current?.stop();
+    };
+  }, []);
+
+  const animatedStyle = useMemo(() => ({ transform: [{ scale }] }), [scale]);
 
   return { animatedStyle, handlePressIn, handlePressOut };
 }

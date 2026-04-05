@@ -6,12 +6,11 @@ import { Session } from '../../data/mockSessions';
 
 interface MapViewProps {
   sessions: Session[];
-  selectedSessionId?: string;
 }
 
-export function MapView({ sessions, selectedSessionId }: MapViewProps) {
+export function MapView({ sessions }: MapViewProps) {
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessibilityLabel={`Map showing ${sessions.length} tennis sessions nearby`}>
       {/* Placeholder map background */}
       <View style={styles.mapBg}>
         <View style={styles.gridLine} />
@@ -20,31 +19,25 @@ export function MapView({ sessions, selectedSessionId }: MapViewProps) {
 
       {/* Session pins */}
       {sessions.map((session, index) => {
-        const isSelected = session.id === selectedSessionId;
         const typeColor = colors.sessionType[session.sessionType];
-        // Distribute pins pseudo-randomly within the container
         const top = 20 + ((index * 37) % 60);
         const left = 15 + ((index * 53) % 70);
 
         return (
           <View
             key={session.id}
+            accessible
+            accessibilityLabel={`${session.sessionType} session at ${session.courtName}`}
             style={[
               styles.pin,
               {
                 top: `${top}%`,
                 left: `${left}%`,
                 backgroundColor: typeColor,
-                transform: [{ scale: isSelected ? 1.3 : 1 }],
               },
-              isSelected && styles.pinSelected,
             ]}
           >
-            <Ionicons
-              name="tennisball"
-              size={isSelected ? 14 : 10}
-              color={colors.bg}
-            />
+            <Ionicons name="tennisball" size={10} color={colors.bg} />
           </View>
         );
       })}
@@ -117,14 +110,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'rgba(0,0,0,0.3)',
-  },
-  pinSelected: {
-    borderColor: colors.textPrimary,
-    borderWidth: 2,
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
   },
   legend: {
     position: 'absolute',

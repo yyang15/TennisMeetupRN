@@ -12,6 +12,7 @@ import { Session } from '../../data/mockSessions';
 interface SessionCardProps {
   session: Session;
   onJoin: (id: string) => void;
+  onPress?: () => void;
 }
 
 function getReliabilityColor(score: number): string {
@@ -24,7 +25,7 @@ function getTypeColor(type: Session['sessionType']): string {
   return colors.sessionType[type];
 }
 
-export function SessionCard({ session, onJoin }: SessionCardProps) {
+export function SessionCard({ session, onJoin, onPress }: SessionCardProps) {
   const { animatedStyle, handlePressIn, handlePressOut } = useAnimatedPress(0.98);
 
   const reliabilityColor = getReliabilityColor(session.reliabilityScore);
@@ -33,6 +34,7 @@ export function SessionCard({ session, onJoin }: SessionCardProps) {
   return (
     <Animated.View style={animatedStyle}>
       <Pressable
+        onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >

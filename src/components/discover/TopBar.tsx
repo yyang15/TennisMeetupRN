@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius, typography, shadows } from '../../theme';
+import { colors, spacing, radius, typography } from '../../theme';
 import { DotBadge } from '../Badge';
 
 interface TopBarProps {
@@ -23,7 +23,7 @@ export function TopBar({ location, notificationCount }: TopBarProps) {
       <Text style={styles.title}>Discover</Text>
 
       {/* Notification bell */}
-      <Pressable style={styles.bellContainer}>
+      <Pressable style={styles.bellContainer} accessibilityLabel={`Notifications, ${notificationCount} new`} accessibilityRole="button">
         <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
         <DotBadge count={notificationCount} />
       </Pressable>
