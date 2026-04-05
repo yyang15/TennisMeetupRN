@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "TennisMeetup",
+    "slug": "tennis-meetup",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0E1116"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tennismeetup.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0E1116"
+      },
+      "package": "com.tennismeetup.app"
+    },
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}
