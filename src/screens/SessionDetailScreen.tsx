@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,53 +11,95 @@ import { HostRow } from '../components/detail/HostRow';
 import { PlayerAvatarList } from '../components/detail/PlayerAvatarList';
 import { CostRow } from '../components/detail/CostRow';
 import { DescriptionBlock } from '../components/detail/DescriptionBlock';
+import { ContactHostRow } from '../components/detail/ContactHostRow';
 import { StickyJoinButton } from '../components/detail/StickyJoinButton';
-import { mockSessions } from '../data/mockSessions';
+import { useSessions } from '../context/SessionContext';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SessionDetail'>;
-type JoinState = 'default' | 'loading' | 'joined';
 
 export function SessionDetailScreen({ route, navigation }: Props) {
   const { sessionId } = route.params;
-  const session = mockSessions.find((s) => s.id === sessionId);
+  const { getSession, joinSession, leaveSession, cancelSession, isUserJoined, user } = useSessions();
+  const session = getSession(sessionId);
   const insets = useSafeAreaInsets();
-  const [joinState, setJoinState] = useState<JoinState>('default');
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Navigate back if session not found
+  const joined = isUserJoined(sessionId);
+  const isFull = session ? session.players.length >= session.totalSpots : false;
+  const isHost = user && session ? session.hostId === user.id : false;
+
   useEffect(() => {
-    if (!session) navigation.goBack();
+    if (!session) {
+      if (navigation.canGoBack()) navigation.goBack();
+      else navigation.replace('Discover');
+    }
   }, [session, navigation]);
 
-  // Reset join state if session changes
-  useEffect(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = null;
-    setJoinState('default');
-  }, [sessionId]);
+  const handleJoin = useCallback(async () => {
+    setLoading(true);
+    try {
+      await joinSession(sessionId);
+    } finally {
+      setLoading(false);
+    }
+  }, [joinSession, sessionId]);
 
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
+  const handleLeave = useCallback(async () => {
+    Alert.alert(
+      'Leave Session',
+      'Are you sure? Your spot may be taken by someone else.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              await leaveSession(sessionId);
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  }, [leaveSession, sessionId]);
 
-  const handleJoin = useCallback(() => {
-    if (joinState !== 'default') return;
-    setJoinState('loading');
-    timerRef.current = setTimeout(() => {
-      setJoinState('joined');
-      timerRef.current = null;
-    }, 1200);
-  }, [joinState]);
+  const handleCancel = useCallback(() => {
+    Alert.alert(
+      'Cancel Session',
+      'This will remove the session for all participants. Are you sure?',
+      [
+        { text: 'Keep', style: 'cancel' },
+        {
+          text: 'Cancel Session',
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              await cancelSession(sessionId);
+            } catch {
+              // cancelSession already shows error alert
+              setLoading(false);
+              return;
+            }
+            setLoading(false);
+            if (navigation.canGoBack()) navigation.goBack();
+          },
+        },
+      ]
+    );
+  }, [cancelSession, sessionId, navigation]);
 
   const handleShare = useCallback(() => {
     Alert.alert('Share', 'Sharing coming soon!');
   }, []);
 
   if (!session) return null;
+
+  const buttonState = loading ? 'loading' : isHost ? 'host' : joined ? 'joined' : isFull ? 'full' : 'join';
 
   return (
     <View style={styles.container}>
@@ -89,6 +131,7 @@ export function SessionDetailScreen({ route, navigation }: Props) {
           date={session.date}
           time={session.time}
           skillRange={session.skillRange}
+          title={session.title}
         />
 
         <HostRow
@@ -103,12 +146,19 @@ export function SessionDetailScreen({ route, navigation }: Props) {
 
         <CostRow cost={session.cost} />
 
+        <ContactHostRow
+          contactMethod={session.hostContactMethod}
+          contactValue={session.hostContactValue}
+        />
+
         <DescriptionBlock description={session.description} />
       </ScrollView>
 
       <StickyJoinButton
-        state={joinState}
+        state={buttonState}
         onJoin={handleJoin}
+        onLeave={handleLeave}
+        onCancel={handleCancel}
         onShare={handleShare}
       />
     </View>

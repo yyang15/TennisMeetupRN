@@ -3,36 +3,43 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DiscoverScreen } from '../screens/DiscoverScreen';
 import { SessionDetailScreen } from '../screens/SessionDetailScreen';
+import { CreateSessionScreen } from '../screens/CreateSessionScreen';
+import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { useSessions } from '../context/SessionContext';
 import { colors } from '../theme';
 
 export type RootStackParamList = {
+  Onboarding: undefined;
   Discover: undefined;
   SessionDetail: { sessionId: string };
+  CreateSession: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const navTheme = {
+  dark: true as const,
+  colors: {
+    primary: colors.accent,
+    background: colors.bg,
+    card: colors.bg,
+    text: colors.textPrimary,
+    border: colors.border,
+    notification: colors.danger,
+  },
+  fonts: {
+    regular: { fontFamily: 'System', fontWeight: '400' as const },
+    medium: { fontFamily: 'System', fontWeight: '500' as const },
+    bold: { fontFamily: 'System', fontWeight: '700' as const },
+    heavy: { fontFamily: 'System', fontWeight: '800' as const },
+  },
+};
+
 export function AppNavigator() {
+  const { user } = useSessions();
+
   return (
-    <NavigationContainer
-      theme={{
-        dark: true,
-        colors: {
-          primary: colors.accent,
-          background: colors.bg,
-          card: colors.bg,
-          text: colors.textPrimary,
-          border: colors.border,
-          notification: colors.danger,
-        },
-        fonts: {
-          regular: { fontFamily: 'System', fontWeight: '400' },
-          medium: { fontFamily: 'System', fontWeight: '500' },
-          bold: { fontFamily: 'System', fontWeight: '700' },
-          heavy: { fontFamily: 'System', fontWeight: '800' },
-        },
-      }}
-    >
+    <NavigationContainer theme={navTheme}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -40,8 +47,23 @@ export function AppNavigator() {
           animation: 'slide_from_right',
         }}
       >
-        <Stack.Screen name="Discover" component={DiscoverScreen} />
-        <Stack.Screen name="SessionDetail" component={SessionDetailScreen} />
+        {user ? (
+          <>
+            <Stack.Screen name="Discover" component={DiscoverScreen} />
+            <Stack.Screen name="SessionDetail" component={SessionDetailScreen} />
+            <Stack.Screen
+              name="CreateSession"
+              component={CreateSessionScreen}
+              options={{ animation: 'slide_from_bottom' }}
+            />
+          </>
+        ) : (
+          <Stack.Screen
+            name="Onboarding"
+            component={OnboardingScreen}
+            options={{ animation: 'fade' }}
+          />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Text,
   ListRenderItem,
-  Alert,
+  RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,11 +16,8 @@ import { FilterChips } from '../components/discover/FilterChips';
 import { SessionCard } from '../components/discover/SessionCard';
 import { MapView } from '../components/discover/MapView';
 import { FloatingActionButton } from '../components/discover/FloatingActionButton';
-import {
-  mockSessions,
-  FilterOption,
-  Session,
-} from '../data/mockSessions';
+import { FilterOption, Session } from '../data/mockSessions';
+import { useSessions } from '../context/SessionContext';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Discover'>;
@@ -31,14 +28,30 @@ function ItemSeparator() {
 
 export function DiscoverScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
+  const { sortedSessions, refreshSessions, user } = useSessions();
   const [activeFilter, setActiveFilter] = useState<FilterOption>('All');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshSessions();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshSessions]);
 
   const filteredSessions = useMemo(() => {
-    if (activeFilter === 'All') return mockSessions;
-    return mockSessions.filter(
+    if (activeFilter === 'All') return sortedSessions;
+    if (activeFilter === 'Mine') {
+      return sortedSessions.filter((s) =>
+        user ? s.players.some((p) => p.id === user.id) || s.hostId === user.id : false
+      );
+    }
+    return sortedSessions.filter(
       (s) => s.sessionType === activeFilter.toLowerCase()
     );
-  }, [activeFilter]);
+  }, [activeFilter, sortedSessions, user]);
 
   const handleCardPress = useCallback(
     (session: Session) => {
@@ -47,35 +60,20 @@ export function DiscoverScreen({ navigation }: Props) {
     [navigation]
   );
 
-  const handleJoin = useCallback((id: string) => {
-    const session = mockSessions.find((s) => s.id === id);
-    if (session) {
-      Alert.alert(
-        'Join Session',
-        `Join ${session.sessionType} at ${session.courtName} at ${session.time}?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Join', style: 'default' },
-        ]
-      );
-    }
-  }, []);
-
   const handleCreateSession = useCallback(() => {
-    Alert.alert('Create Session', 'Session creation coming soon!');
-  }, []);
+    navigation.navigate('CreateSession');
+  }, [navigation]);
 
   const renderSessionCard: ListRenderItem<Session> = useCallback(
     ({ item }) => (
       <View style={styles.cardWrapper}>
         <SessionCard
           session={item}
-          onJoin={handleJoin}
           onPress={() => handleCardPress(item)}
         />
       </View>
     ),
-    [handleJoin, handleCardPress]
+    [handleCardPress]
   );
 
   const keyExtractor = useCallback((item: Session) => item.id, []);
@@ -90,7 +88,9 @@ export function DiscoverScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Nearby Sessions</Text>
+          <Text style={styles.sectionTitle}>
+            {activeFilter === 'Mine' ? 'My Sessions' : 'Nearby Sessions'}
+          </Text>
           <Text style={styles.sectionCount}>{filteredSessions.length} available</Text>
         </View>
       </>
@@ -102,20 +102,24 @@ export function DiscoverScreen({ navigation }: Props) {
     () => (
       <View style={styles.emptyState}>
         <Text style={styles.emptyIcon}>🎾</Text>
-        <Text style={styles.emptyTitle}>No sessions found</Text>
+        <Text style={styles.emptyTitle}>
+          {activeFilter === 'Mine' ? 'No sessions yet' : 'No sessions found'}
+        </Text>
         <Text style={styles.emptySubtitle}>
-          Try changing filters or create your own session
+          {activeFilter === 'Mine'
+            ? 'Join or create a session to see it here'
+            : 'Try changing filters or create your own session'}
         </Text>
       </View>
     ),
-    []
+    [activeFilter]
   );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar style="light" />
 
-      <TopBar location="Seattle, WA" notificationCount={3} />
+      <TopBar location={user?.location ?? 'Seattle, WA'} notificationCount={0} />
 
       <FlatList
         data={filteredSessions}
@@ -129,6 +133,14 @@ export function DiscoverScreen({ navigation }: Props) {
         ]}
         ItemSeparatorComponent={ItemSeparator}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
+          />
+        }
       />
 
       <FloatingActionButton onPress={handleCreateSession} />
@@ -141,9 +153,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
-  listContent: {
-    // paddingBottom set dynamically above
-  },
+  listContent: {},
   filterSection: {
     paddingVertical: spacing.base,
   },

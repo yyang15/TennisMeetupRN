@@ -1,17 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius, typography, shadows } from '../../theme';
+import { colors, spacing, radius, typography } from '../../theme';
 import { Card } from '../Card';
 import { Badge } from '../Badge';
 import { Avatar } from '../Avatar';
 import { Button } from '../Button';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { Session } from '../../data/mockSessions';
+import { useSessions } from '../../context/SessionContext';
+import { formatDate } from '../../data/dateUtils';
 
 interface SessionCardProps {
   session: Session;
-  onJoin: (id: string) => void;
   onPress?: () => void;
 }
 
@@ -25,11 +26,15 @@ function getTypeColor(type: Session['sessionType']): string {
   return colors.sessionType[type];
 }
 
-export function SessionCard({ session, onJoin, onPress }: SessionCardProps) {
+export function SessionCard({ session, onPress }: SessionCardProps) {
   const { animatedStyle, handlePressIn, handlePressOut } = useAnimatedPress(0.98);
+  const { user } = useSessions();
 
+  const spotsLeft = session.totalSpots - session.players.length;
+  const isFull = spotsLeft <= 0;
+  const isJoined = user ? session.players.some((p) => p.id === user.id) : false;
   const reliabilityColor = getReliabilityColor(session.reliabilityScore);
-  const spotsUrgent = session.spotsLeft <= 2;
+  const spotsUrgent = spotsLeft <= 2 && spotsLeft > 0;
 
   return (
     <Animated.View style={animatedStyle}>
@@ -42,11 +47,14 @@ export function SessionCard({ session, onJoin, onPress }: SessionCardProps) {
           <View style={styles.content}>
             {/* Left: Info */}
             <View style={styles.infoSection}>
-              {/* Top row: Time + Skill badge */}
+              {/* Top row: Title + Skill badge */}
               <View style={styles.topRow}>
                 <View style={styles.timeBlock}>
+                  {session.title ? (
+                    <Text style={styles.sessionTitle} numberOfLines={1}>{session.title}</Text>
+                  ) : null}
                   <Text style={styles.time}>{session.time}</Text>
-                  <Text style={styles.date}>{session.date}</Text>
+                  <Text style={styles.date}>{formatDate(session.date)}</Text>
                 </View>
                 <Badge label={session.skillRange} variant="accent" />
               </View>
@@ -65,20 +73,26 @@ export function SessionCard({ session, onJoin, onPress }: SessionCardProps) {
               {/* Bottom: Spots + Host + Reliability */}
               <View style={styles.bottomRow}>
                 <View style={styles.spotsContainer}>
-                  <View
-                    style={[
-                      styles.spotsDot,
-                      { backgroundColor: spotsUrgent ? colors.warning : colors.success },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.spotsText,
-                      spotsUrgent && { color: colors.warning },
-                    ]}
-                  >
-                    {session.spotsLeft} {session.spotsLeft === 1 ? 'spot' : 'spots'} left
-                  </Text>
+                  {isFull ? (
+                    <Text style={styles.fullText}>Full</Text>
+                  ) : (
+                    <>
+                      <View
+                        style={[
+                          styles.spotsDot,
+                          { backgroundColor: spotsUrgent ? colors.warning : colors.success },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.spotsText,
+                          spotsUrgent && { color: colors.warning },
+                        ]}
+                      >
+                        {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} left
+                      </Text>
+                    </>
+                  )}
                 </View>
 
                 <View style={styles.hostInfo}>
@@ -95,7 +109,7 @@ export function SessionCard({ session, onJoin, onPress }: SessionCardProps) {
               </View>
             </View>
 
-            {/* Right: Join button */}
+            {/* Right: Status */}
             <View style={styles.joinSection}>
               <View
                 style={[
@@ -103,12 +117,18 @@ export function SessionCard({ session, onJoin, onPress }: SessionCardProps) {
                   { backgroundColor: getTypeColor(session.sessionType) },
                 ]}
               />
-              <Button
-                title="JOIN"
-                onPress={() => onJoin(session.id)}
-                size="sm"
-                style={styles.joinButton}
-              />
+              {isJoined ? (
+                <View style={styles.joinedBadge}>
+                  <Ionicons name="checkmark-circle" size={14} color={colors.accent} />
+                  <Text style={styles.joinedText}>Joined</Text>
+                </View>
+              ) : (
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={colors.textTertiary}
+                />
+              )}
             </View>
           </View>
         </Card>
@@ -136,6 +156,12 @@ const styles = StyleSheet.create({
   },
   timeBlock: {
     gap: 2,
+    flex: 1,
+  },
+  sessionTitle: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    marginBottom: 2,
   },
   time: {
     ...typography.timeLarge,
@@ -187,6 +213,10 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
   },
+  fullText: {
+    ...typography.captionMedium,
+    color: colors.textTertiary,
+  },
   hostInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -212,7 +242,13 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  joinButton: {
-    minWidth: 64,
+  joinedBadge: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  joinedText: {
+    ...typography.caption,
+    color: colors.accent,
+    fontSize: 10,
   },
 });

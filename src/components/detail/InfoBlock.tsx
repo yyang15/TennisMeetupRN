@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius, typography } from '../../theme';
+import { colors, spacing, typography } from '../../theme';
 import { Badge } from '../Badge';
 import { SessionType } from '../../data/mockSessions';
+import { formatDate } from '../../data/dateUtils';
 
 interface InfoBlockProps {
   sessionType: SessionType;
@@ -12,6 +13,7 @@ interface InfoBlockProps {
   date: string;
   time: string;
   skillRange: string;
+  title?: string;
 }
 
 const typeLabels: Record<SessionType, string> = {
@@ -28,11 +30,18 @@ export function InfoBlock({
   date,
   time,
   skillRange,
+  title,
 }: InfoBlockProps) {
+  const displayTitle = title || typeLabels[sessionType];
+  const displayDate = formatDate(date);
+
   return (
     <View style={styles.container}>
       {/* Title */}
-      <Text style={styles.title}>{typeLabels[sessionType]}</Text>
+      <Text style={styles.title}>{displayTitle}</Text>
+      {title && (
+        <Text style={styles.typeLabel}>{typeLabels[sessionType]}</Text>
+      )}
 
       {/* Court */}
       <View style={styles.row}>
@@ -48,7 +57,7 @@ export function InfoBlock({
         <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
         <View style={styles.rowText}>
           <Text style={styles.primaryText}>
-            {date} at {time}
+            {displayDate} at {time}
           </Text>
         </View>
       </View>
@@ -73,6 +82,11 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h1,
     color: colors.textPrimary,
+  },
+  typeLabel: {
+    ...typography.captionMedium,
+    color: colors.textSecondary,
+    marginTop: -spacing.sm,
   },
   row: {
     flexDirection: 'row',
