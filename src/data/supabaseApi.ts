@@ -73,7 +73,7 @@ export async function fetchUser(userId: string): Promise<DbUser | null> {
 
 // ---- Session Operations ----
 
-export type UpdateUserInput = Partial<Omit<CreateUserInput, never>>;
+export type UpdateUserInput = Partial<CreateUserInput>;
 
 export async function updateUser(userId: string, input: UpdateUserInput): Promise<void> {
   const { error } = await supabase
@@ -150,7 +150,7 @@ export async function joinSession(sessionId: string, userId: string, hostId?: st
     supabase
       .from('notifications')
       .insert({ user_id: hostId, session_id: sessionId, actor_user_id: userId, type: 'join' })
-      .then();
+      .then(({ error: e }) => { if (e) console.warn('Failed to insert join notification:', e.message); });
   }
 }
 
@@ -168,7 +168,7 @@ export async function leaveSession(sessionId: string, userId: string, hostId?: s
     supabase
       .from('notifications')
       .insert({ user_id: hostId, session_id: sessionId, actor_user_id: userId, type: 'leave' })
-      .then();
+      .then(({ error: e }) => { if (e) console.warn('Failed to insert leave notification:', e.message); });
   }
 }
 
@@ -259,10 +259,12 @@ export async function fetchUnreadNotificationCount(userId: string): Promise<numb
 }
 
 export async function markNotificationAsRead(notificationId: string): Promise<void> {
-  await supabase
+  const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
     .eq('id', notificationId);
+
+  if (error) console.warn('Failed to mark notification as read:', error.message);
 }
 
 // ---- Transform DB → UI Model ----

@@ -5,7 +5,6 @@ import { colors, spacing, radius, typography } from '../../theme';
 import { Card } from '../Card';
 import { Badge } from '../Badge';
 import { Avatar } from '../Avatar';
-import { Button } from '../Button';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 import { Session } from '../../data/mockSessions';
 import { useSessions } from '../../context/SessionContext';

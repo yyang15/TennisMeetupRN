@@ -71,7 +71,6 @@ export function NotificationsScreen({ navigation }: Props) {
     if (!user) return;
     try {
       const data = await api.fetchNotifications(user.id);
-      console.log('[Notifications] fetched', data.length, 'for user', user.id);
       setNotifications(data);
     } catch (e) {
       console.warn('[Notifications] fetch error:', e);

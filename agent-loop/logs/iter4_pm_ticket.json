@@ -1,0 +1,20 @@
+{
+  "iteration": 4,
+  "title": "Fix UpdateUserInput type and add error logging to fire-and-forget notification inserts",
+  "priority": "medium",
+  "source": "code-review-M5-H2-H3",
+  "problem": "1) UpdateUserInput uses confusing Partial<Omit<CreateUserInput, never>> which is just Partial<CreateUserInput>. 2) joinSession/leaveSession notification inserts use .then() with no args, silently swallowing errors. 3) markNotificationAsRead has zero error handling.",
+  "goal": "Clean up types and add minimal error logging to fire-and-forget operations",
+  "acceptance_criteria": [
+    "UpdateUserInput simplified to Partial<CreateUserInput>",
+    "joinSession/leaveSession notification inserts log errors via console.warn",
+    "markNotificationAsRead checks error and logs",
+    "TypeScript type-check passes",
+    "No regressions"
+  ],
+  "files_likely_involved": [
+    "src/data/supabaseApi.ts"
+  ],
+  "risk": "low — type alias simplification + adding console.warn to fire-and-forget",
+  "confidence": 0.95
+}
