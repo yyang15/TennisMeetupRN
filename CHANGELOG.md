@@ -5,9 +5,46 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Real Map** — Discover 页面 MapView 替换为 WebView + Leaflet.js + CartoDB dark tiles，显示真实 Seattle 地图，session pins 按类型颜色编码，点击 pin 弹出球场名称
+- **Distance 计算** — SessionCard 显示基于用户实际位置计算的真实距离（如 "2.3 mi"），使用 expo-location + haversine 公式
+- **Nearby Courts** — Create Session 球场选择器添加 "Find Nearby" 按钮，使用 expo-location + Overpass API 搜索附近网球场，支持反向地理编码 + 聚类去重
+- **Notifications 系统** — Supabase `notifications` 表，join/leave 自动写入通知记录，Discover bell 显示未读数，NotificationsScreen 列表页（actor name + session title + 相对时间），点击标记已读
+- **Profile 页面** — ProfileScreen 查看/编辑用户信息（name, skill level, location, contact），保存到 Supabase + 更新 Context + Toast 反馈
+- **Preferred Locations** — Supabase `user_preferred_locations` 表，创建 session 后自动保存球场，下次创建时显示 "Recent" 快速选择
+- **Toast 组件** — 轻量级动画 Toast banner，用于 join/leave/create/profile 操作反馈
+- **FAB 标签** — "+" 图标按钮改为 "+ Create Session" 药丸按钮
+- **Quick Pick 时间** — Create Session 添加快速时间预设（Today 6 PM, Tomorrow 9 AM 等），一键设置日期+时间
+- **Discard 确认** — Create Session 表单有数据时点返回弹出 "Discard Changes?" 确认
+- **Skill/Notes 警告** — Notes 内容与选择的 Skill Level 矛盾时显示 inline ⚠️ 警告
+- **dangerOutline 按钮变体** — 新增红色边框+红色文字按钮样式，用于 "Leave Session"
+- **Agent Loop 系统** — `.claude/commands/` PM/Engineer/QA prompts + `agent-loop/` orchestrator, backlog, state, logs
+
 ### Changed
+- **Session Card** — 时间格式改为 "TODAY 6:00 PM"，底部显示 "Kevin + 2 others" 玩家摘要
+- **Chip 对比度** — 未选中 chips 改为 surface 背景 + 更亮边框 + textPrimary 文字，选中 chips 加粗 700
+- **Skill Level 统一** — Profile/Onboarding/CreateSession 统一使用 Beginner/Intermediate/Advanced 标签（原 Profile 用 NTRP 数值）
+- **Create Session 表单** — "When" 合并 Quick Pick + Date + Time 为一个区块，Court 区改为单选模式
+- **Notes 字段** — 标签从 "Notes / Contact Info" 简化为 "Notes"，placeholder 更实用
+- **MapView** — 高度 180→160px，legend 移除
+- **outline 按钮** — 恢复为中性样式（白色边框），Leave Session 改用 dangerOutline
+- **Bell 导航** — 点击铃铛导航到 NotificationsScreen（原为 inline banner toggle）
+
 ### Fixed
-### Notes
+- **CRITICAL: Discard 弹窗 bug** — 成功发布 session 后 `navigation.replace` 不再触发 "Discard Changes?" 弹窗（`published` ref 守卫）
+- **Toast 计时器重置** — `onDismiss` 改用 `useRef` 存储稳定引用，避免 context 更新导致的计时器循环重置
+- **Android 表单锁死** — `submitting.current` 在成功路径重置 + Alert 设置 `cancelable: false`
+- **Quick Pick 标签错误** — "Today 8 PM" 改为 "Today 7 PM"（实际时间是 7:00 PM）
+- **通知 fire-and-forget** — join/leave 的通知插入从静默 `.then()` 改为带 `console.warn` 的错误日志
+- **markNotificationAsRead** — 添加错误检查和日志
+- **UpdateUserInput 类型** — `Partial<Omit<T, never>>` 简化为 `Partial<T>`
+
+### Removed
+- **Dead notification system** — SessionContext 中的本地 player-diff 通知系统（55 行死代码），已被 DB-backed 通知替代
+- **Debug console.log** — NotificationsScreen 中泄露 user ID 的日志
+- **Unused Button import** — SessionCard 中未使用的 Button 导入
+- **Dead "View Profile" 按钮** — HostRow 中无 onPress 的假按钮
+- **Hardcoded reliability score** — 从 SessionCard 和 HostRow 移除硬编码 95% 显示（数据模型保留，等真实数据再加回）
+- **Inline notification banner** — DiscoverScreen 中已废弃的 showNotifications + banner JSX + 相关样式
 
 ---
 
