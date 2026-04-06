@@ -18,7 +18,11 @@ import { useSessions, CurrentUser } from '../context/SessionContext';
 import * as supabaseApi from '../data/supabaseApi';
 import type { ContactMethod } from '../data/mockSessions';
 
-const SKILL_LEVELS = ['2.5', '3.0', '3.5', '4.0', '4.5+'] as const;
+const SKILL_LEVELS: { label: string; value: string; range: string }[] = [
+  { label: 'Beginner', value: 'beginner', range: '2.5–3.0' },
+  { label: 'Intermediate', value: 'intermediate', range: '3.5–4.0' },
+  { label: 'Advanced', value: 'advanced', range: '4.5+' },
+];
 const CONTACT_METHODS: { label: string; value: ContactMethod }[] = [
   { label: 'Phone', value: 'phone' },
   { label: 'WeChat', value: 'wechat' },
@@ -65,7 +69,7 @@ export function OnboardingScreen() {
     try {
       const dbUser = await supabaseApi.createUser({
         name: name.trim(),
-        skill_level: skillLevel!,
+        skill_level: SKILL_LEVELS.find((l) => l.value === skillLevel!)?.range ?? skillLevel!,
         location: location.trim(),
         contact_method: contactMethod!,
         contact_value: contactValue.trim(),
@@ -124,14 +128,14 @@ export function OnboardingScreen() {
 
           {/* Skill Level */}
           <View style={styles.field}>
-            <SectionLabel label="Skill Level (NTRP)" />
+          <SectionLabel label="Skill Level" />
             <View style={styles.chipRow}>
               {SKILL_LEVELS.map((level) => (
                 <Chip
-                  key={level}
-                  label={level}
-                  active={skillLevel === level}
-                  onPress={() => setSkillLevel(level)}
+                  key={level.value}
+                  label={level.label}
+                  active={skillLevel === level.value}
+                  onPress={() => setSkillLevel(level.value)}
                 />
               ))}
             </View>

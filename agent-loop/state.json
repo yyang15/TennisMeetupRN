@@ -1,5 +1,5 @@
 {
-  "iteration_count": 4,
+  "iteration_count": 5,
   "consecutive_failures": 0,
   "no_improvement_rounds": 0,
   "baseline_metrics": {
@@ -12,12 +12,12 @@
     "typecheck_pass": true,
     "typecheck_errors": 0,
     "src_files": 40,
-    "src_lines": 3969
+    "src_lines": 3990
   },
   "last_3_tasks": [
-    "Remove dead local notification system from SessionContext",
     "Remove debug console.log and unused imports",
-    "Fix UpdateUserInput type and fire-and-forget notification error swallowing"
+    "Fix UpdateUserInput type and fire-and-forget notification error swallowing",
+    "Unify skill level system between Profile and CreateSession"
   ],
   "failures": [],
   "successes": [
@@ -29,17 +29,22 @@
     {
       "task": "Remove dead local notification system from SessionContext",
       "pattern": "Identify dead code via consumer analysis, remove safely",
-      "impact": "Removed 55 lines of dead code, reduced CPU waste on every session refresh"
+      "impact": "Removed 55 lines of dead code"
     },
     {
       "task": "Remove debug console.log and unused imports",
       "pattern": "Grep for console.log and unused imports, remove",
-      "impact": "Eliminated user ID leak in console, cleaner imports"
+      "impact": "Eliminated user ID leak in console"
     },
     {
       "task": "Fix UpdateUserInput type and fire-and-forget notification error swallowing",
       "pattern": "Simplify confusing type alias, add error logging to .then() chains",
-      "impact": "Better type clarity, notification failures now visible in logs"
+      "impact": "Better type clarity, notification failures now visible"
+    },
+    {
+      "task": "Unify skill level system between Profile and CreateSession",
+      "pattern": "Replace raw NTRP arrays with shared labeled SKILL_LEVELS + mapDbSkillToValue() for backward compat",
+      "impact": "lines: 3969 → 3990, consistent UX across all 3 screens"
     }
   ]
 }

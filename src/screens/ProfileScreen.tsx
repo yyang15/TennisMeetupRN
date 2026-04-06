@@ -25,7 +25,24 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
-const SKILL_LEVELS = ['2.5', '3.0', '3.5', '4.0', '4.5+'] as const;
+const SKILL_LEVELS: { label: string; value: string; range: string }[] = [
+  { label: 'Beginner', value: 'beginner', range: '2.5–3.0' },
+  { label: 'Intermediate', value: 'intermediate', range: '3.5–4.0' },
+  { label: 'Advanced', value: 'advanced', range: '4.5+' },
+];
+
+/** Map existing DB skill values (e.g. "3.5", "3.5–4.0") to a label value */
+function mapDbSkillToValue(dbValue: string | undefined): string | null {
+  if (!dbValue) return null;
+  for (const level of SKILL_LEVELS) {
+    if (level.range === dbValue || level.value === dbValue) return level.value;
+  }
+  const num = parseFloat(dbValue);
+  if (isNaN(num)) return null;
+  if (num <= 3.0) return 'beginner';
+  if (num <= 4.0) return 'intermediate';
+  return 'advanced';
+}
 const CONTACT_METHODS: { label: string; value: ContactMethod }[] = [
   { label: 'Phone', value: 'phone' },
   { label: 'WeChat', value: 'wechat' },
@@ -46,7 +63,7 @@ export function ProfileScreen({ navigation }: Props) {
   const { user, setUser } = useSessions();
 
   const [name, setName] = useState(user?.name ?? '');
-  const [skillLevel, setSkillLevel] = useState<string | null>(user?.skillLevel ?? null);
+  const [skillLevel, setSkillLevel] = useState<string | null>(mapDbSkillToValue(user?.skillLevel) ?? null);
   const [location, setLocation] = useState(user?.location ?? '');
   const [contactMethod, setContactMethod] = useState<ContactMethod | null>(user?.contactMethod ?? null);
   const [contactValue, setContactValue] = useState(user?.contactValue ?? '');
@@ -72,7 +89,7 @@ export function ProfileScreen({ navigation }: Props) {
     try {
       await supabaseApi.updateUser(user.id, {
         name: name.trim(),
-        skill_level: skillLevel!,
+        skill_level: SKILL_LEVELS.find((l) => l.value === skillLevel!)?.range ?? skillLevel!,
         location: location.trim(),
         contact_method: contactMethod!,
         contact_value: contactValue.trim(),
@@ -81,7 +98,7 @@ export function ProfileScreen({ navigation }: Props) {
       const updated: CurrentUser = {
         ...user,
         name: name.trim(),
-        skillLevel: skillLevel!,
+        skillLevel: SKILL_LEVELS.find((l) => l.value === skillLevel!)?.range ?? skillLevel!,
         location: location.trim(),
         contactMethod: contactMethod!,
         contactValue: contactValue.trim(),
@@ -144,14 +161,14 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.field}>
-            <SectionLabel label="Skill Level (NTRP)" />
+          <SectionLabel label="Skill Level" />
             <View style={styles.chipRow}>
               {SKILL_LEVELS.map((level) => (
                 <Chip
-                  key={level}
-                  label={level}
-                  active={skillLevel === level}
-                  onPress={() => setSkillLevel(level)}
+                  key={level.value}
+                  label={level.label}
+                  active={skillLevel === level.value}
+                  onPress={() => setSkillLevel(level.value)}
                 />
               ))}
             </View>
