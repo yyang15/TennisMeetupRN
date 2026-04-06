@@ -53,6 +53,23 @@ const COURTS = [
 
 const HOURS = ['8:00 AM', '9:00 AM', '10:00 AM', '5:00 PM', '6:00 PM', '7:00 PM'] as const;
 
+/** Generate time slots in 30-minute increments from 6 AM to 10 PM */
+function generateTimeSlots(): string[] {
+  const slots: string[] = [];
+  for (let h = 6; h <= 21; h++) {
+    for (const m of [0, 30]) {
+      if (h === 21 && m === 30) continue;
+      const hour12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const min = m === 0 ? '00' : String(m);
+      slots.push(`${hour12}:${min} ${ampm}`);
+    }
+  }
+  return slots;
+}
+
+const TIME_SLOTS = generateTimeSlots();
+
 /** Generate quick date+time presets based on current time */
 function generateQuickPresets(): { label: string; date: string; time: string }[] {
   const presets: { label: string; date: string; time: string }[] = [];
@@ -350,16 +367,20 @@ export function CreateSessionScreen({ navigation }: Props) {
               ))}
             </View>
             <Text style={styles.subsectionLabel}>Time</Text>
-            <View style={styles.chipRow}>
-              {HOURS.map((h) => (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.timeScrollContent}
+            >
+              {TIME_SLOTS.map((t) => (
                 <Chip
-                  key={h}
-                  label={h}
-                  active={selectedTime === h}
-                  onPress={() => setSelectedTime(h)}
+                  key={t}
+                  label={t}
+                  active={selectedTime === t}
+                  onPress={() => setSelectedTime(t)}
                 />
               ))}
-            </View>
+            </ScrollView>
           </View>
 
           <View style={styles.field}>
@@ -629,6 +650,10 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  timeScrollContent: {
+    gap: spacing.sm,
+    paddingRight: spacing.base,
   },
   skillWarning: {
     ...typography.caption,
