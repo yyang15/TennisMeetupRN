@@ -74,7 +74,7 @@ for flow in "$SCRIPT_DIR"/*.yaml; do
   TOTAL=$((TOTAL + 1))
 
   echo "▶ Running: $name"
-  if maestro test "$flow" 2>&1 | tee "$OUTPUT_DIR/${name}_${TIMESTAMP}.log" | grep -E "✅|❌|PASSED|FAILED"; then
+  if maestro test "$flow" 2>&1 | grep -E "✅|❌|PASSED|FAILED"; then
     echo "  ✅ PASS"
     PASS=$((PASS + 1))
   else
