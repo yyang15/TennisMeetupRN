@@ -134,7 +134,7 @@ function SectionLabel({ label, required }: { label: string; required?: boolean }
 export function CreateSessionScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { addSession, user } = useSessions();
-  const submitting = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
   const published = useRef(false);
 
   const dateOptions = useMemo(() => generateDateOptions(), []);
@@ -222,7 +222,7 @@ export function CreateSessionScreen({ navigation }: Props) {
   }, []);
 
   const handlePublish = useCallback(async () => {
-    if (submitting.current) return;
+    if (submitting) return;
     if (!user) {
       Alert.alert('Error', 'User session lost. Please restart the app.');
       return;
@@ -242,7 +242,7 @@ export function CreateSessionScreen({ navigation }: Props) {
       return;
     }
 
-    submitting.current = true;
+    setSubmitting(true);
 
     const matchedLevel = SKILL_LEVELS.find((l) => l.value === skillLevel!);
     const skillRange = matchedLevel?.range ?? skillLevel!;
@@ -264,7 +264,7 @@ export function CreateSessionScreen({ navigation }: Props) {
         description: notes.trim() || `${title.trim()} — hosted by ${user.name}`,
       });
       api.savePreferredLocation(user.id, courtName).catch(() => {});
-      submitting.current = false;
+      setSubmitting(false);
       published.current = true;
       Alert.alert('Session Created 🎾', 'Your session is now live!', [
         {
@@ -274,9 +274,9 @@ export function CreateSessionScreen({ navigation }: Props) {
       ], { cancelable: false });
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Failed to create session');
-      submitting.current = false;
+      setSubmitting(false);
     }
-  }, [title, sessionType, selectedDate, selectedTime, selectedCourt, showCustomCourt, customCourt, skillLevel, playerLimit, notes, addSession, navigation, user]);
+  }, [title, sessionType, selectedDate, selectedTime, selectedCourt, showCustomCourt, customCourt, skillLevel, playerLimit, notes, addSession, navigation, user, submitting]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -518,6 +518,8 @@ export function CreateSessionScreen({ navigation }: Props) {
             title="Publish Session"
             onPress={handlePublish}
             size="lg"
+            loading={submitting}
+            disabled={submitting}
             style={styles.publishButton}
           />
         </View>

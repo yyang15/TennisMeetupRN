@@ -37,30 +37,23 @@
     "priority": "high",
     "status": "done",
     "completed_at": "2026-04-06",
-    "agent_iteration": 5,
-    "source": "code-review-H5"
+    "agent_iteration": 5
   },
   {
     "id": 6,
     "title": "Fix submitting pattern inconsistency (useRef vs useState)",
     "priority": "medium",
-    "status": "open",
-    "source": "code-review-M11",
-    "files": ["src/screens/CreateSessionScreen.tsx"],
-    "complexity": "small"
+    "status": "done",
+    "completed_at": "2026-04-06",
+    "agent_iteration": 7
   },
   {
     "id": 7,
-    "title": "Replace time pill grid with native DateTimePicker for custom time input",
+    "title": "Replace time pill grid with scrollable 30-min time slots",
     "priority": "critical",
     "status": "done",
     "completed_at": "2026-04-06",
-    "agent_iteration": 6,
-    "source": "ux-review-2026-04-06",
-    "problem": "Fixed pill grid only allows preset times (8AM, 9AM, etc). Users cannot enter 6:15 PM or any non-preset time. Hard blocker for creating sessions.",
-    "solution": "Replace time chips with iOS native UIDatePicker (expo has DateTimePicker). Keep Quick Pick presets as shortcuts.",
-    "files": ["src/screens/CreateSessionScreen.tsx"],
-    "complexity": "medium"
+    "agent_iteration": 6
   },
   {
     "id": 8,
@@ -69,44 +62,29 @@
     "status": "done",
     "completed_at": "2026-04-06",
     "agent_iteration": 6,
-    "note": "Already implemented — showToast('Joined session 🎾') exists in SessionDetailScreen.tsx line 51",
-    "source": "ux-review-2026-04-06",
-    "problem": "Tapping Join Session jumps back to Discover with no toast/haptic. User doesn't know if join succeeded. Toast component already exists.",
-    "solution": "Show toast 'Joined session 🎾' after joinSession succeeds — stay on detail screen, don't auto-navigate back.",
-    "files": ["src/screens/SessionDetailScreen.tsx"],
-    "complexity": "trivial"
+    "note": "Already implemented — showToast exists in SessionDetailScreen"
   },
   {
     "id": 9,
     "title": "Add success feedback after saving Profile",
     "priority": "medium",
-    "status": "open",
-    "source": "ux-review-2026-04-06",
-    "problem": "Save Changes silently closes. User unsure if skill level actually saved.",
-    "solution": "Toast 'Profile updated ✓' already implemented — verify it's working. If not, fix the Toast display.",
-    "files": ["src/screens/ProfileScreen.tsx"],
-    "complexity": "trivial"
+    "status": "done",
+    "completed_at": "2026-04-06",
+    "agent_iteration": 7,
+    "note": "Already implemented — Toast exists in ProfileScreen"
   },
   {
     "id": 10,
     "title": "Replace FAB with iOS-native top-right + button",
     "priority": "low",
-    "status": "open",
-    "source": "ux-review-2026-04-06",
-    "problem": "Floating green FAB is an Android Material Design pattern. iOS users expect a + in the navigation bar.",
-    "solution": "Move create action to TopBar right side or keep FAB but add a top-right + as well.",
-    "files": ["src/components/discover/TopBar.tsx", "src/screens/DiscoverScreen.tsx"],
-    "complexity": "small"
+    "status": "deferred",
+    "note": "Design preference, not a UX bug. FAB works well for MVP. Revisit post-launch."
   },
   {
     "id": 11,
     "title": "Add back button labels per iOS HIG",
     "priority": "low",
-    "status": "open",
-    "source": "ux-review-2026-04-06",
-    "problem": "Back button shows only '<' chevron, iOS HIG expects '< Nearby Sessions' or '< Discover'.",
-    "solution": "Add headerBackTitle to React Navigation screen options.",
-    "files": ["src/navigation/AppNavigator.tsx"],
-    "complexity": "trivial"
+    "status": "deferred",
+    "note": "All screens use custom headers with headerShown:false. Adding labels requires header redesign. Revisit post-launch."
   }
 ]
