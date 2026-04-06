@@ -3,20 +3,11 @@ import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { colors, spacing, radius } from '../../theme';
 import { Session } from '../../data/mockSessions';
+import { COURT_COORDINATES } from '../../data/courtCoordinates';
 
 interface MapViewProps {
   sessions: Session[];
 }
-
-const COURT_COORDINATES: Record<string, [number, number]> = {
-  'Green Lake Tennis Courts': [47.6801, -122.3298],
-  'Volunteer Park Courts': [47.6305, -122.3158],
-  'Bobby Morris Playfield': [47.6171, -122.3204],
-  'Amy Yee Tennis Center': [47.5900, -122.3106],
-  'Lower Woodland Courts': [47.6655, -122.3440],
-  'Magnuson Park Courts': [47.6817, -122.2582],
-  'Rainier Beach Playfield': [47.5109, -122.2689],
-};
 
 const TYPE_COLORS: Record<string, string> = {
   singles: colors.sessionType.singles,
@@ -64,7 +55,7 @@ export function MapView({ sessions }: MapViewProps) {
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
   <style>
     * { margin: 0; padding: 0; }
     #map { width: 100%; height: 100vh; }
@@ -88,7 +79,7 @@ export function MapView({ sessions }: MapViewProps) {
       maxZoom: 19,
     }).addTo(map);
     ${markerJs}
-  </script>
+  <\/script>
 </body>
 </html>`;
   }, [sessions]);
@@ -102,7 +93,7 @@ export function MapView({ sessions }: MapViewProps) {
       overScrollMode="never"
       javaScriptEnabled
       originWhitelist={['*']}
-      accessibilityLabel={`Map showing tennis sessions`}
+      accessibilityLabel="Map showing tennis sessions"
     />
   );
 }

@@ -19,6 +19,8 @@ import { FloatingActionButton } from '../components/discover/FloatingActionButto
 import { FilterOption, Session } from '../data/mockSessions';
 import { useSessions } from '../context/SessionContext';
 import * as api from '../data/supabaseApi';
+import { getCourtDistance } from '../data/courtCoordinates';
+import * as Location from 'expo-location';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Discover'>;
@@ -33,6 +35,21 @@ export function DiscoverScreen({ navigation }: Props) {
   const [activeFilter, setActiveFilter] = useState<FilterOption>('All');
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLon, setUserLon] = useState<number | null>(null);
+
+  // Get user location once for distance calculation
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setUserLat(loc.coords.latitude);
+        setUserLon(loc.coords.longitude);
+      } catch {}
+    })();
+  }, []);
 
   const refreshUnreadCount = useCallback(() => {
     if (!user) return;
@@ -61,16 +78,23 @@ export function DiscoverScreen({ navigation }: Props) {
   }, [refreshSessions, refreshUnreadCount]);
 
   const filteredSessions = useMemo(() => {
-    if (activeFilter === 'All') return sortedSessions;
-    if (activeFilter === 'Mine') {
-      return sortedSessions.filter((s) =>
+    let result: Session[];
+    if (activeFilter === 'All') result = sortedSessions;
+    else if (activeFilter === 'Mine') {
+      result = sortedSessions.filter((s) =>
         user ? s.players.some((p) => p.id === user.id) || s.hostId === user.id : false
       );
+    } else {
+      result = sortedSessions.filter(
+        (s) => s.sessionType === activeFilter.toLowerCase()
+      );
     }
-    return sortedSessions.filter(
-      (s) => s.sessionType === activeFilter.toLowerCase()
-    );
-  }, [activeFilter, sortedSessions, user]);
+    // Inject computed distances
+    return result.map((s) => ({
+      ...s,
+      distance: getCourtDistance(s.courtName, userLat, userLon),
+    }));
+  }, [activeFilter, sortedSessions, user, userLat, userLon]);
 
   const handleBellPress = useCallback(() => {
     navigation.navigate('Notifications');
