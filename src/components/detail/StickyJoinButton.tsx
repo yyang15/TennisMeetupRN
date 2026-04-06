@@ -37,7 +37,7 @@ export function StickyJoinButton({ state, onJoin, onLeave, onCancel, onShare }: 
   }
 
   let title: string;
-  let variant: 'primary' | 'secondary' | 'outline' = 'primary';
+  let variant: 'primary' | 'secondary' | 'outline' | 'dangerOutline' = 'primary';
   let onPress: () => void;
   let disabled = false;
   let loading = false;
@@ -56,7 +56,7 @@ export function StickyJoinButton({ state, onJoin, onLeave, onCancel, onShare }: 
       break;
     case 'joined':
       title = 'Leave Session';
-      variant = 'outline';
+      variant = 'dangerOutline';
       onPress = onLeave;
       break;
     case 'full':

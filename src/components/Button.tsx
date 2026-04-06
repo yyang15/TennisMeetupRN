@@ -11,7 +11,7 @@ import {
 import { colors, spacing, radius, typography, shadows } from '../theme';
 import { useAnimatedPress } from '../hooks/useAnimatedPress';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'dangerOutline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -49,6 +49,10 @@ const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextSty
     text: { color: colors.textPrimary },
   },
   outline: {
+    container: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: 'rgba(255, 255, 255, 0.25)' },
+    text: { color: colors.textPrimary },
+  },
+  dangerOutline: {
     container: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.danger },
     text: { color: colors.danger },
   },

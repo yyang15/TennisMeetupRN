@@ -330,11 +330,14 @@ export function CreateSessionScreen({ navigation }: Props) {
                 />
               ))}
             </View>
-            {selectedDate && selectedTime && quickPresets.some((p) => p.date === selectedDate && p.time === selectedTime) && (
-              <Text style={styles.quickPickConfirm}>
-                ✓ {quickPresets.find((p) => p.date === selectedDate && p.time === selectedTime)!.label}
-              </Text>
-            )}
+            {(() => {
+              const matched = selectedDate && selectedTime
+                ? quickPresets.find((p) => p.date === selectedDate && p.time === selectedTime)
+                : null;
+              return matched ? (
+                <Text style={styles.quickPickConfirm}>✓ {matched.label}</Text>
+              ) : null;
+            })()}
             <Text style={styles.subsectionLabel}>Date</Text>
             <View style={styles.chipRow}>
               {dateOptions.map((opt) => (
