@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../theme';
 import { Avatar } from '../Avatar';
@@ -42,10 +42,6 @@ export function HostRow({ hostName, reliabilityScore }: HostRowProps) {
           {reliabilityScore}%
         </Text>
       </View>
-
-      <Pressable style={styles.viewProfile} accessibilityLabel={`View ${hostName}'s profile`} accessibilityRole="button">
-        <Text style={styles.viewProfileText}>View Profile</Text>
-      </Pressable>
     </View>
   );
 }
@@ -82,12 +78,5 @@ const styles = StyleSheet.create({
   },
   reliabilityText: {
     ...typography.captionMedium,
-  },
-  viewProfile: {
-    paddingVertical: spacing.xs,
-  },
-  viewProfileText: {
-    ...typography.captionMedium,
-    color: colors.accent,
   },
 });
