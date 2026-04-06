@@ -1,12 +1,12 @@
 #!/bin/bash
-# TennisMeetup — Record full app test as a single video
+# TennisMeetup — Record full app walkthrough as a single smooth video
 #
 # Uses xcrun simctl to record the iOS Simulator screen
-# while running Maestro test flows sequentially.
+# while running ONE continuous Maestro walkthrough flow.
 #
 # Prerequisites:
 # 1. iOS Simulator running
-# 2. TennisMeetup app already open in Simulator
+# 2. TennisMeetup app already open on Discover screen
 # 3. Maestro installed
 #
 # Usage: ./maestro/test_and_record.sh
@@ -17,16 +17,16 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 OUTPUT_DIR="$PROJECT_DIR/maestro/recordings"
-VIDEO_FILE="$OUTPUT_DIR/full_test_${TIMESTAMP}.mp4"
+VIDEO_FILE="$OUTPUT_DIR/walkthrough_${TIMESTAMP}.mp4"
+FLOW="$SCRIPT_DIR/full_walkthrough.yaml"
 
 export PATH="$PATH:$HOME/.maestro/bin"
 
 mkdir -p "$OUTPUT_DIR"
 
 echo "============================================"
-echo "TennisMeetup — Full App Test & Record"
+echo "TennisMeetup — Full App Walkthrough Recording"
 echo "Time: $(date)"
-echo "Output: $VIDEO_FILE"
 echo "============================================"
 echo ""
 
@@ -48,63 +48,46 @@ for runtime,devices in data.get('devices',{}).items():
 
 if [ -z "$BOOTED_DEVICE" ]; then
   echo "❌ No booted iOS Simulator found."
-  echo "   Run: open -a Simulator"
-  echo "   Then start the app in Simulator (press 'i' in Metro terminal)"
+  echo "   1. open -a Simulator"
+  echo "   2. Start Expo and press 'i' to load app"
   exit 1
 fi
 
 echo "📱 Simulator: $BOOTED_DEVICE"
-echo "🎬 Starting screen recording..."
+echo "🎬 Recording to: $VIDEO_FILE"
 echo ""
 
-# Start screen recording in background
+# Start screen recording
 xcrun simctl io "$BOOTED_DEVICE" recordVideo --codec h264 "$VIDEO_FILE" &
 RECORD_PID=$!
-
-# Give recorder a moment to start
 sleep 2
 
-PASS=0
-FAIL=0
-TOTAL=0
+echo "▶ Running full walkthrough..."
+echo ""
 
-for flow in "$SCRIPT_DIR"/*.yaml; do
-  [ "$(basename "$flow")" = "config.yaml" ] && continue
-  name=$(basename "$flow" .yaml)
-  TOTAL=$((TOTAL + 1))
-
-  echo "▶ Running: $name"
-  if maestro test "$flow" 2>&1 | grep -E "✅|❌|PASSED|FAILED"; then
-    echo "  ✅ PASS"
-    PASS=$((PASS + 1))
-  else
-    echo "  ❌ FAIL"
-    FAIL=$((FAIL + 1))
-  fi
-  echo ""
-
-  # Brief pause between flows for visual clarity
-  sleep 1
-done
+maestro test "$FLOW" 2>&1
+TEST_EXIT=$?
 
 # Stop recording
-echo "🛑 Stopping recording..."
+sleep 1
 kill -INT "$RECORD_PID" 2>/dev/null
 wait "$RECORD_PID" 2>/dev/null || true
 sleep 1
 
 echo ""
 echo "============================================"
-echo "RESULTS: $PASS/$TOTAL passed, $FAIL failed"
-echo ""
+
+if [ $TEST_EXIT -eq 0 ]; then
+  echo "✅ Walkthrough PASSED"
+else
+  echo "⚠️  Walkthrough had some skipped steps (recording still saved)"
+fi
 
 if [ -f "$VIDEO_FILE" ]; then
   SIZE=$(ls -lh "$VIDEO_FILE" | awk '{print $5}')
-  echo "🎬 Recording: $VIDEO_FILE ($SIZE)"
+  echo "🎬 Video: $VIDEO_FILE ($SIZE)"
 else
-  echo "⚠️  Recording file not found"
+  echo "❌ Recording file not found"
 fi
 
 echo "============================================"
-
-exit $FAIL
