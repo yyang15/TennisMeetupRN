@@ -1,12 +1,9 @@
-# Profile flow — assumes app is on Discover screen
+appId: host.exp.Exponent
 ---
-# Tap profile icon
+# Profile flow
 - tapOn:
     id: "Profile"
 - takeScreenshot: profile_01_form
 - assertVisible: "Your Name"
 - assertVisible: "Skill Level"
-- takeScreenshot: profile_02_fields
-
-# Go back
 - back

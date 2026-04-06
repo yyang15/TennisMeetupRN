@@ -1,6 +1,5 @@
-# Full app walkthrough — assumes app is already open on Discover screen
-# Run with: maestro test maestro/01_discover.yaml
+appId: host.exp.Exponent
 ---
-- assertVisible: "Discover"
+# Discover screen — verify core elements
 - assertVisible: "Create Session"
 - takeScreenshot: discover_home

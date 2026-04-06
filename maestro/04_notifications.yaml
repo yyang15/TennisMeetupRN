@@ -1,10 +1,7 @@
-# Notifications flow — assumes app is on Discover screen
+appId: host.exp.Exponent
 ---
-# Tap bell icon
+# Notifications flow
 - tapOn:
     id: "Notifications.*"
 - takeScreenshot: notif_01_list
-
-# Go back
 - back
-- takeScreenshot: notif_02_back
