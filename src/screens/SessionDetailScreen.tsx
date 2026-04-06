@@ -150,10 +150,7 @@ export function SessionDetailScreen({ route, navigation }: Props) {
           title={session.title}
         />
 
-        <HostRow
-          hostName={session.hostName}
-          reliabilityScore={session.reliabilityScore}
-        />
+        <HostRow hostName={session.hostName} />
 
         <PlayerAvatarList
           players={session.players}

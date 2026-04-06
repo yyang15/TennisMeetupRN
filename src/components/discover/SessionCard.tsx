@@ -15,12 +15,6 @@ interface SessionCardProps {
   onPress?: () => void;
 }
 
-function getReliabilityColor(score: number): string {
-  if (score >= 90) return colors.reliability.high;
-  if (score >= 70) return colors.reliability.medium;
-  return colors.reliability.low;
-}
-
 function getTypeColor(type: Session['sessionType']): string {
   return colors.sessionType[type];
 }
@@ -40,7 +34,6 @@ export function SessionCard({ session, onPress }: SessionCardProps) {
   const spotsLeft = session.totalSpots - session.players.length;
   const isFull = spotsLeft <= 0;
   const isJoined = user ? session.players.some((p) => p.id === user.id) : false;
-  const reliabilityColor = getReliabilityColor(session.reliabilityScore);
   const spotsUrgent = spotsLeft <= 2 && spotsLeft > 0;
 
   return (
@@ -104,14 +97,6 @@ export function SessionCard({ session, onPress }: SessionCardProps) {
                 <View style={styles.hostInfo}>
                   <Text style={styles.playerSummary}>{getPlayerSummary(session)}</Text>
                   <Avatar name={session.hostName} size="sm" />
-                  <View style={styles.reliabilityContainer}>
-                    {session.reliabilityScore < 70 && (
-                      <Ionicons name="warning" size={12} color={colors.danger} />
-                    )}
-                    <Text style={[styles.reliability, { color: reliabilityColor }]}>
-                      {session.reliabilityScore}%
-                    </Text>
-                  </View>
                 </View>
               </View>
             </View>
@@ -228,14 +213,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-  },
-  reliabilityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  reliability: {
-    ...typography.captionMedium,
   },
   joinSection: {
     alignItems: 'center',
