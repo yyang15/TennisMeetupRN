@@ -42,25 +42,7 @@ export function MapView({ sessions }: MapViewProps) {
         );
       })}
 
-      {/* Legend */}
-      <View style={styles.legend}>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.sessionType.singles }]} />
-          <Text style={styles.legendText}>Singles</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.sessionType.doubles }]} />
-          <Text style={styles.legendText}>Doubles</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.sessionType.hitting }]} />
-          <Text style={styles.legendText}>Hitting</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.sessionType.coaching }]} />
-          <Text style={styles.legendText}>Coaching</Text>
-        </View>
-      </View>
+      {/* Legend removed — fake map pins don't need a legend */}
 
       {/* Map placeholder text */}
       <View style={styles.placeholder}>
@@ -73,7 +55,7 @@ export function MapView({ sessions }: MapViewProps) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 180,
+    height: 120,
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     marginHorizontal: spacing.base,
@@ -110,32 +92,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'rgba(0,0,0,0.3)',
-  },
-  legend: {
-    position: 'absolute',
-    bottom: spacing.sm,
-    left: spacing.sm,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    backgroundColor: 'rgba(14, 17, 22, 0.8)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.xs,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xxs,
-  },
-  legendDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  legendText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontSize: 10,
   },
   placeholder: {
     position: 'absolute',

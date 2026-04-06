@@ -49,8 +49,8 @@ const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextSty
     text: { color: colors.textPrimary },
   },
   outline: {
-    container: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border },
-    text: { color: colors.textPrimary },
+    container: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.danger },
+    text: { color: colors.danger },
   },
   ghost: {
     container: { backgroundColor: 'transparent' },

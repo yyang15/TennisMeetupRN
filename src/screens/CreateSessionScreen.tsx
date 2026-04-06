@@ -118,6 +118,7 @@ export function CreateSessionScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { addSession, user } = useSessions();
   const submitting = useRef(false);
+  const published = useRef(false);
 
   const dateOptions = useMemo(() => generateDateOptions(), []);
   const quickPresets = useMemo(() => generateQuickPresets(), []);
@@ -157,7 +158,7 @@ export function CreateSessionScreen({ navigation }: Props) {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      if (!hasFormData) return;
+      if (published.current || !hasFormData) return;
 
       e.preventDefault();
 
@@ -247,6 +248,7 @@ export function CreateSessionScreen({ navigation }: Props) {
       });
       api.savePreferredLocation(user.id, courtName).catch(() => {});
       submitting.current = false;
+      published.current = true;
       Alert.alert('Session Created 🎾', 'Your session is now live!', [
         {
           text: 'View Session',
@@ -328,6 +330,11 @@ export function CreateSessionScreen({ navigation }: Props) {
                 />
               ))}
             </View>
+            {selectedDate && selectedTime && quickPresets.some((p) => p.date === selectedDate && p.time === selectedTime) && (
+              <Text style={styles.quickPickConfirm}>
+                ✓ {quickPresets.find((p) => p.date === selectedDate && p.time === selectedTime)!.label}
+              </Text>
+            )}
             <Text style={styles.subsectionLabel}>Date</Text>
             <View style={styles.chipRow}>
               {dateOptions.map((opt) => (
@@ -454,12 +461,12 @@ export function CreateSessionScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.field}>
-            <SectionLabel label="Notes / Contact Info" />
+            <SectionLabel label="Notes" />
             <TextInput
               style={[styles.textInput, styles.multiline]}
               value={notes}
               onChangeText={setNotes}
-              placeholder="Looking for intermediate players"
+              placeholder="e.g. Looking for rally partner, Court 3, bring water"
               placeholderTextColor={colors.textTertiary}
               multiline
               numberOfLines={3}
@@ -624,6 +631,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.warning,
     marginTop: spacing.xs,
+  },
+  quickPickConfirm: {
+    ...typography.caption,
+    color: colors.accent,
+    marginTop: spacing.xxs,
   },
   courtHeader: {
     flexDirection: 'row',
