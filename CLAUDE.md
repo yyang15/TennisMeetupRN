@@ -93,7 +93,6 @@ cd /Users/yuekunyang/TennisMeetupRN && /usr/local/bin/claude_code/node ./node_mo
 3. `sl push --to main` 推送到 GitHub
 4. 确认 push 成功后再告知用户 session 结束
 - P0: 表单太长，关键按钮不可见 → 考虑折叠 All Courts 列表
-- P0: 没有「取消创建」确认 → 返回时弹出 "Discard changes?"
 - P1: Profile 和 Create Session 的 skill 体系不一致（NTRP vs Beginner/Intermediate/Advanced）
 - P2: Player Limit 只有 2 和 4 → 加上 6、8 选项
 - P2: 通知空状态引导 → "Host a session to get notified when players join"

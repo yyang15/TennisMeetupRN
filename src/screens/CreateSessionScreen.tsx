@@ -145,6 +145,39 @@ export function CreateSessionScreen({ navigation }: Props) {
   const [nearbyCourts, setNearbyCourts] = useState<NearbyCourt[]>([]);
   const [nearbyLoading, setNearbyLoading] = useState(false);
 
+  const hasFormData = title.trim() !== '' ||
+    sessionType !== null ||
+    selectedDate !== null ||
+    selectedTime !== null ||
+    selectedCourt !== null ||
+    showCustomCourt ||
+    skillLevel !== null ||
+    playerLimit !== null ||
+    notes.trim() !== '';
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (!hasFormData) return;
+
+      e.preventDefault();
+
+      Alert.alert(
+        'Discard Changes?',
+        'You have unsaved changes. Are you sure you want to leave?',
+        [
+          { text: 'Keep Editing', style: 'cancel' },
+          {
+            text: 'Discard',
+            style: 'destructive',
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ]
+      );
+    });
+
+    return unsubscribe;
+  }, [navigation, hasFormData]);
+
   const handleFindNearby = useCallback(async () => {
     setNearbyModalVisible(true);
     setNearbyLoading(true);
