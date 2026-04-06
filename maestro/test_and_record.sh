@@ -50,7 +50,7 @@ for flow in "$SCRIPT_DIR"/*.yaml; do
 
   echo "🎬 Recording: $name → $recording"
 
-  if maestro record "$flow" --output "$recording" 2>&1 | tee "$OUTPUT_DIR/${name}.log"; then
+  if maestro record --local "$flow" "$recording" 2>&1 | tee "$OUTPUT_DIR/${name}.log"; then
     echo "  ✅ PASS: $name"
     PASS=$((PASS + 1))
     RESULTS="$RESULTS\n  ✅ $name → $recording"
