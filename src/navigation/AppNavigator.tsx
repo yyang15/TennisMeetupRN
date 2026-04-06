@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DiscoverScreen } from '../screens/DiscoverScreen';
 import { SessionDetailScreen } from '../screens/SessionDetailScreen';
 import { CreateSessionScreen } from '../screens/CreateSessionScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { useSessions } from '../context/SessionContext';
 import { colors } from '../theme';
@@ -13,6 +15,8 @@ export type RootStackParamList = {
   Discover: undefined;
   SessionDetail: { sessionId: string };
   CreateSession: undefined;
+  Notifications: undefined;
+  Profile: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -56,6 +60,8 @@ export function AppNavigator() {
               component={CreateSessionScreen}
               options={{ animation: 'slide_from_bottom' }}
             />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
           </>
         ) : (
           <Stack.Screen

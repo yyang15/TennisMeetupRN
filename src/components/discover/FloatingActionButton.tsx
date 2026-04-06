@@ -1,8 +1,8 @@
 import React from 'react';
-import { Pressable, StyleSheet, Animated } from 'react-native';
+import { Pressable, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, shadows, spacing } from '../../theme';
+import { colors, shadows, spacing, typography } from '../../theme';
 import { useAnimatedPress } from '../../hooks/useAnimatedPress';
 
 interface FloatingActionButtonProps {
@@ -23,7 +23,8 @@ export function FloatingActionButton({ onPress }: FloatingActionButtonProps) {
         accessibilityLabel="Create session"
         accessibilityRole="button"
       >
-        <Ionicons name="add" size={28} color={colors.bg} />
+        <Ionicons name="add" size={20} color={colors.bg} />
+        <Text style={styles.fabLabel}>Create Session</Text>
       </Pressable>
     </Animated.View>
   );
@@ -35,11 +36,18 @@ const styles = StyleSheet.create({
     right: spacing.base,
   },
   fab: {
-    width: 56,
-    height: 56,
+    flexDirection: 'row',
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
     borderRadius: 28,
     backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  fabLabel: {
+    ...typography.bodyMedium,
+    color: colors.bg,
+    fontWeight: '700',
   },
 });

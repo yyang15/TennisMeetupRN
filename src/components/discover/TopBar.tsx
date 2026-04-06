@@ -7,9 +7,11 @@ import { DotBadge } from '../Badge';
 interface TopBarProps {
   location: string;
   notificationCount: number;
+  onBellPress?: () => void;
+  onProfilePress?: () => void;
 }
 
-export function TopBar({ location, notificationCount }: TopBarProps) {
+export function TopBar({ location, notificationCount, onBellPress, onProfilePress }: TopBarProps) {
   return (
     <View style={styles.container}>
       {/* Location pill */}
@@ -22,11 +24,16 @@ export function TopBar({ location, notificationCount }: TopBarProps) {
       {/* Title */}
       <Text style={styles.title}>Discover</Text>
 
-      {/* Notification bell */}
-      <Pressable style={styles.bellContainer} accessibilityLabel={`Notifications, ${notificationCount} new`} accessibilityRole="button">
-        <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
-        <DotBadge count={notificationCount} />
-      </Pressable>
+      {/* Profile + Notification */}
+      <View style={styles.rightIcons}>
+        <Pressable style={styles.iconButton} onPress={onProfilePress} accessibilityLabel="Profile" accessibilityRole="button">
+          <Ionicons name="person-circle-outline" size={24} color={colors.textPrimary} />
+        </Pressable>
+        <Pressable style={styles.iconButton} onPress={onBellPress} accessibilityLabel={`Notifications, ${notificationCount} new`} accessibilityRole="button">
+          <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
+          <DotBadge count={notificationCount} />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -65,7 +72,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     zIndex: -1,
   },
-  bellContainer: {
+  rightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  iconButton: {
     width: 40,
     height: 40,
     alignItems: 'center',

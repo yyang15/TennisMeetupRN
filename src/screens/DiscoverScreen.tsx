@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -18,6 +18,7 @@ import { MapView } from '../components/discover/MapView';
 import { FloatingActionButton } from '../components/discover/FloatingActionButton';
 import { FilterOption, Session } from '../data/mockSessions';
 import { useSessions } from '../context/SessionContext';
+import * as api from '../data/supabaseApi';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Discover'>;
@@ -31,15 +32,33 @@ export function DiscoverScreen({ navigation }: Props) {
   const { sortedSessions, refreshSessions, user } = useSessions();
   const [activeFilter, setActiveFilter] = useState<FilterOption>('All');
   const [refreshing, setRefreshing] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const refreshUnreadCount = useCallback(() => {
+    if (!user) return;
+    api.fetchUnreadNotificationCount(user.id).then(setUnreadCount).catch(() => {});
+  }, [user]);
+
+  // Fetch on mount
+  useEffect(() => {
+    refreshUnreadCount();
+  }, [refreshUnreadCount]);
+
+  // Re-fetch on screen focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', refreshUnreadCount);
+    return unsubscribe;
+  }, [navigation, refreshUnreadCount]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await refreshSessions();
+      refreshUnreadCount();
     } finally {
       setRefreshing(false);
     }
-  }, [refreshSessions]);
+  }, [refreshSessions, refreshUnreadCount]);
 
   const filteredSessions = useMemo(() => {
     if (activeFilter === 'All') return sortedSessions;
@@ -52,6 +71,14 @@ export function DiscoverScreen({ navigation }: Props) {
       (s) => s.sessionType === activeFilter.toLowerCase()
     );
   }, [activeFilter, sortedSessions, user]);
+
+  const handleBellPress = useCallback(() => {
+    navigation.navigate('Notifications');
+  }, [navigation]);
+
+  const handleProfilePress = useCallback(() => {
+    navigation.navigate('Profile');
+  }, [navigation]);
 
   const handleCardPress = useCallback(
     (session: Session) => {
@@ -119,7 +146,12 @@ export function DiscoverScreen({ navigation }: Props) {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar style="light" />
 
-      <TopBar location={user?.location ?? 'Seattle, WA'} notificationCount={0} />
+      <TopBar
+        location={user?.location ?? 'Seattle, WA'}
+        notificationCount={unreadCount}
+        onBellPress={handleBellPress}
+        onProfilePress={handleProfilePress}
+      />
 
       <FlatList
         data={filteredSessions}

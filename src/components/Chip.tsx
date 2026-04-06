@@ -37,23 +37,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.sm,
     borderRadius: radius.full,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   active: {
     backgroundColor: colors.accent,
     borderColor: colors.accent,
   },
   inactive: {
-    backgroundColor: 'transparent',
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   text: {
     ...typography.captionMedium,
   },
   activeText: {
     color: colors.bg,
+    fontWeight: '700',
   },
   inactiveText: {
-    color: colors.textSecondary,
+    color: colors.textPrimary,
   },
 });

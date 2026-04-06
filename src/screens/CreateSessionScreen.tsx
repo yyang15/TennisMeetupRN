@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,8 +21,10 @@ import { colors, spacing, radius, typography } from '../theme';
 import { Chip } from '../components/Chip';
 import { Button } from '../components/Button';
 import { useSessions } from '../context/SessionContext';
+import * as api from '../data/supabaseApi';
 import type { SessionType } from '../data/mockSessions';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import { findNearbyCourts, NearbyCourt } from '../data/nearbySearch';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateSession'>;
 
@@ -29,13 +34,11 @@ const SESSION_TYPES: { label: string; value: SessionType }[] = [
   { label: 'Hitting', value: 'hitting' },
 ];
 
-const SKILL_RANGE_MAP: Record<string, string> = {
-  '2.5': '2.5–3.0',
-  '3.0': '3.0–3.5',
-  '3.5': '3.5–4.0',
-  '4.0': '4.0–4.5',
-  '4.5+': '4.5+',
-};
+const SKILL_LEVELS: { label: string; value: string; range: string }[] = [
+  { label: 'Beginner', value: 'beginner', range: '2.5–3.0' },
+  { label: 'Intermediate', value: 'intermediate', range: '3.5–4.0' },
+  { label: 'Advanced', value: 'advanced', range: '4.5+' },
+];
 const PLAYER_LIMITS = [2, 4] as const;
 
 const COURTS = [
@@ -49,6 +52,39 @@ const COURTS = [
 ] as const;
 
 const HOURS = ['8:00 AM', '9:00 AM', '10:00 AM', '5:00 PM', '6:00 PM', '7:00 PM'] as const;
+
+/** Generate quick date+time presets based on current time */
+function generateQuickPresets(): { label: string; date: string; time: string }[] {
+  const presets: { label: string; date: string; time: string }[] = [];
+  const now = new Date();
+  const currentHour = now.getHours();
+
+  const fmt = (d: Date) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const today = new Date(now);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Find next Saturday
+  const saturday = new Date(now);
+  const dayOfWeek = saturday.getDay();
+  const daysUntilSat = dayOfWeek === 6 ? 7 : (6 - dayOfWeek);
+  saturday.setDate(saturday.getDate() + daysUntilSat);
+
+  if (currentHour < 16) presets.push({ label: 'Today 5 PM', date: fmt(today), time: '5:00 PM' });
+  if (currentHour < 17) presets.push({ label: 'Today 6 PM', date: fmt(today), time: '6:00 PM' });
+  if (currentHour < 19) presets.push({ label: 'Today 7 PM', date: fmt(today), time: '7:00 PM' });
+  presets.push({ label: 'Tomorrow 9 AM', date: fmt(tomorrow), time: '9:00 AM' });
+  presets.push({ label: 'Tomorrow 6 PM', date: fmt(tomorrow), time: '6:00 PM' });
+  if (daysUntilSat > 1) presets.push({ label: 'Sat 9 AM', date: fmt(saturday), time: '9:00 AM' });
+
+  return presets.slice(0, 4);
+}
 
 /** Generate date options for the next 7 days */
 function generateDateOptions(): { label: string; value: string }[] {
@@ -84,6 +120,16 @@ export function CreateSessionScreen({ navigation }: Props) {
   const submitting = useRef(false);
 
   const dateOptions = useMemo(() => generateDateOptions(), []);
+  const quickPresets = useMemo(() => generateQuickPresets(), []);
+
+  const [preferredLocations, setPreferredLocations] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    api.fetchPreferredLocations(user.id)
+      .then(setPreferredLocations)
+      .catch(() => {});
+  }, [user]);
 
   const [title, setTitle] = useState('');
   const [sessionType, setSessionType] = useState<SessionType | null>(null);
@@ -95,6 +141,34 @@ export function CreateSessionScreen({ navigation }: Props) {
   const [skillLevel, setSkillLevel] = useState<string | null>(null);
   const [playerLimit, setPlayerLimit] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
+  const [nearbyModalVisible, setNearbyModalVisible] = useState(false);
+  const [nearbyCourts, setNearbyCourts] = useState<NearbyCourt[]>([]);
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+
+  const handleFindNearby = useCallback(async () => {
+    setNearbyModalVisible(true);
+    setNearbyLoading(true);
+    setNearbyCourts([]);
+    try {
+      const courts = await findNearbyCourts();
+      setNearbyCourts(courts);
+    } catch (e: any) {
+      const msg = e.message === 'Location permission denied'
+        ? 'Please enable location access in your device settings.'
+        : 'Could not find nearby courts. Try again later.';
+      Alert.alert('Location Error', msg);
+      setNearbyModalVisible(false);
+    } finally {
+      setNearbyLoading(false);
+    }
+  }, []);
+
+  const handleSelectNearbyCourt = useCallback((court: NearbyCourt) => {
+    setSelectedCourt(null);
+    setCustomCourt(court.name);
+    setShowCustomCourt(true);
+    setNearbyModalVisible(false);
+  }, []);
 
   const handlePublish = useCallback(async () => {
     if (submitting.current) return;
@@ -119,13 +193,14 @@ export function CreateSessionScreen({ navigation }: Props) {
 
     submitting.current = true;
 
-    const skillRange = SKILL_RANGE_MAP[skillLevel!] ?? skillLevel!;
+    const matchedLevel = SKILL_LEVELS.find((l) => l.value === skillLevel!);
+    const skillRange = matchedLevel?.range ?? skillLevel!;
 
     const courtName = selectedCourt !== null ? COURTS[selectedCourt].name : customCourt.trim();
     const courtAddress = selectedCourt !== null ? COURTS[selectedCourt].address : user.location;
 
     try {
-      await addSession({
+      const newSessionId = await addSession({
         host_id: user.id,
         title: title.trim(),
         session_type: sessionType!,
@@ -137,7 +212,14 @@ export function CreateSessionScreen({ navigation }: Props) {
         total_spots: playerLimit!,
         description: notes.trim() || `${title.trim()} — hosted by ${user.name}`,
       });
-      navigation.goBack();
+      api.savePreferredLocation(user.id, courtName).catch(() => {});
+      submitting.current = false;
+      Alert.alert('Session Created 🎾', 'Your session is now live!', [
+        {
+          text: 'View Session',
+          onPress: () => navigation.replace('SessionDetail', { sessionId: newSessionId }),
+        },
+      ], { cancelable: false });
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Failed to create session');
       submitting.current = false;
@@ -178,7 +260,7 @@ export function CreateSessionScreen({ navigation }: Props) {
               style={styles.textInput}
               value={title}
               onChangeText={setTitle}
-              placeholder="Saturday morning rally"
+              placeholder="Sunday morning hitting"
               placeholderTextColor={colors.textTertiary}
             />
           </View>
@@ -198,7 +280,22 @@ export function CreateSessionScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.field}>
-            <SectionLabel label="Date" required />
+            <SectionLabel label="When" required />
+            <Text style={styles.subsectionLabel}>Quick Pick</Text>
+            <View style={styles.chipRow}>
+              {quickPresets.map((p) => (
+                <Chip
+                  key={p.label}
+                  label={p.label}
+                  active={selectedDate === p.date && selectedTime === p.time}
+                  onPress={() => {
+                    setSelectedDate(p.date);
+                    setSelectedTime(p.time);
+                  }}
+                />
+              ))}
+            </View>
+            <Text style={styles.subsectionLabel}>Date</Text>
             <View style={styles.chipRow}>
               {dateOptions.map((opt) => (
                 <Chip
@@ -209,10 +306,7 @@ export function CreateSessionScreen({ navigation }: Props) {
                 />
               ))}
             </View>
-          </View>
-
-          <View style={styles.field}>
-            <SectionLabel label="Time" required />
+            <Text style={styles.subsectionLabel}>Time</Text>
             <View style={styles.chipRow}>
               {HOURS.map((h) => (
                 <Chip
@@ -226,7 +320,45 @@ export function CreateSessionScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.field}>
-            <SectionLabel label="Court" required />
+            <View style={styles.courtHeader}>
+              <SectionLabel label="Court" required />
+              <Pressable style={styles.findNearbyButton} onPress={handleFindNearby}>
+                <Ionicons name="navigate-outline" size={14} color={colors.accent} />
+                <Text style={styles.findNearbyText}>Find Nearby</Text>
+              </Pressable>
+            </View>
+            {preferredLocations.length > 0 && (
+              <>
+                <Text style={styles.subsectionLabel}>Recent</Text>
+                <View style={styles.chipRow}>
+                  {preferredLocations.map((loc) => {
+                    const courtIndex = COURTS.findIndex((c) => c.name === loc);
+                    const isActive = courtIndex >= 0
+                      ? selectedCourt === courtIndex
+                      : showCustomCourt && customCourt === loc;
+                    return (
+                      <Chip
+                        key={`pref-${loc}`}
+                        label={loc}
+                        active={isActive}
+                        onPress={() => {
+                          if (courtIndex >= 0) {
+                            setSelectedCourt(courtIndex);
+                            setCustomCourt('');
+                            setShowCustomCourt(false);
+                          } else {
+                            setSelectedCourt(null);
+                            setCustomCourt(loc);
+                            setShowCustomCourt(true);
+                          }
+                        }}
+                      />
+                    );
+                  })}
+                </View>
+                <Text style={styles.subsectionLabel}>All Courts</Text>
+              </>
+            )}
             <View style={styles.chipRow}>
               {COURTS.map((court, i) => (
                 <Chip
@@ -241,7 +373,7 @@ export function CreateSessionScreen({ navigation }: Props) {
                 />
               ))}
               <Chip
-                label="Other"
+                label="Other…"
                 active={showCustomCourt}
                 onPress={() => {
                   setSelectedCourt(null);
@@ -263,12 +395,12 @@ export function CreateSessionScreen({ navigation }: Props) {
           <View style={styles.field}>
             <SectionLabel label="Skill Level" required />
             <View style={styles.chipRow}>
-              {Object.keys(SKILL_RANGE_MAP).map((level) => (
+              {SKILL_LEVELS.map((level) => (
                 <Chip
-                  key={level}
-                  label={level}
-                  active={skillLevel === level}
-                  onPress={() => setSkillLevel(level)}
+                  key={level.value}
+                  label={level.label}
+                  active={skillLevel === level.value}
+                  onPress={() => setSkillLevel(level.value)}
                 />
               ))}
             </View>
@@ -294,13 +426,26 @@ export function CreateSessionScreen({ navigation }: Props) {
               style={[styles.textInput, styles.multiline]}
               value={notes}
               onChangeText={setNotes}
-              placeholder="Text me when you arrive. Court 3."
+              placeholder="Looking for intermediate players"
               placeholderTextColor={colors.textTertiary}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
               maxLength={500}
             />
+            {skillLevel && notes.trim().length > 0 && (() => {
+              const skillLabel = SKILL_LEVELS.find((l) => l.value === skillLevel)?.label.toLowerCase();
+              const notesLower = notes.toLowerCase();
+              const conflictWord = ['beginner', 'intermediate', 'advanced'].find(
+                (w) => notesLower.includes(w) && w !== skillLabel
+              );
+              if (!conflictWord) return null;
+              return (
+                <Text style={styles.skillWarning}>
+                  ⚠️ Notes mention "{conflictWord}" but skill level is set to {skillLabel}.
+                </Text>
+              );
+            })()}
           </View>
         </ScrollView>
 
@@ -313,6 +458,57 @@ export function CreateSessionScreen({ navigation }: Props) {
           />
         </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={nearbyModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setNearbyModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, spacing.base) }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Nearby Tennis Courts</Text>
+              <Pressable onPress={() => setNearbyModalVisible(false)}>
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
+              </Pressable>
+            </View>
+
+            {nearbyLoading ? (
+              <View style={styles.modalCenter}>
+                <ActivityIndicator size="large" color={colors.accent} />
+                <Text style={styles.modalLoadingText}>Searching nearby courts…</Text>
+              </View>
+            ) : nearbyCourts.length === 0 ? (
+              <View style={styles.modalCenter}>
+                <Ionicons name="tennisball-outline" size={48} color={colors.textTertiary} />
+                <Text style={styles.modalEmptyText}>No tennis courts found nearby</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={nearbyCourts}
+                keyExtractor={(_, i) => String(i)}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={styles.courtResultRow}
+                    onPress={() => handleSelectNearbyCourt(item)}
+                  >
+                    <Ionicons name="location" size={18} color={colors.accent} />
+                    <View style={styles.courtResultInfo}>
+                      <Text style={styles.courtResultName}>{item.name}</Text>
+                      {item.address ? (
+                        <Text style={styles.courtResultAddress}>{item.address}</Text>
+                      ) : null}
+                    </View>
+                    <Text style={styles.courtResultDistance}>{item.distance.toFixed(1)} mi</Text>
+                  </Pressable>
+                )}
+                showsVerticalScrollIndicator={false}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -385,5 +581,91 @@ const styles = StyleSheet.create({
   },
   publishButton: {
     width: '100%',
+  },
+  subsectionLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  skillWarning: {
+    ...typography.caption,
+    color: colors.warning,
+    marginTop: spacing.xs,
+  },
+  courtHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  findNearbyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+  },
+  findNearbyText: {
+    ...typography.captionMedium,
+    color: colors.accent,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.bg,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '70%',
+    paddingTop: spacing.base,
+    paddingHorizontal: spacing.base,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.base,
+  },
+  modalTitle: {
+    ...typography.h3,
+    color: colors.textPrimary,
+  },
+  modalCenter: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxxxl,
+    gap: spacing.md,
+  },
+  modalLoadingText: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  modalEmptyText: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  courtResultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    gap: spacing.md,
+  },
+  courtResultInfo: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  courtResultName: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+  },
+  courtResultAddress: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  courtResultDistance: {
+    ...typography.captionMedium,
+    color: colors.accent,
   },
 });

@@ -73,6 +73,17 @@ export async function fetchUser(userId: string): Promise<DbUser | null> {
 
 // ---- Session Operations ----
 
+export type UpdateUserInput = Partial<Omit<CreateUserInput, never>>;
+
+export async function updateUser(userId: string, input: UpdateUserInput): Promise<void> {
+  const { error } = await supabase
+    .from('users')
+    .update(input)
+    .eq('id', userId);
+
+  if (error) throw new Error(`Failed to update user: ${error.message}`);
+}
+
 export async function fetchSessions(): Promise<Session[]> {
   const { data, error } = await supabase
     .from('sessions')
@@ -103,7 +114,7 @@ export interface CreateSessionInput {
   description: string;
 }
 
-export async function createSession(input: CreateSessionInput): Promise<void> {
+export async function createSession(input: CreateSessionInput): Promise<string> {
   // Insert session
   const { data: session, error: sessionError } = await supabase
     .from('sessions')
@@ -119,9 +130,11 @@ export async function createSession(input: CreateSessionInput): Promise<void> {
     .insert({ session_id: session.id, user_id: input.host_id });
 
   if (participantError) throw new Error(`Failed to add host as participant: ${participantError.message}`);
+
+  return session.id;
 }
 
-export async function joinSession(sessionId: string, userId: string): Promise<void> {
+export async function joinSession(sessionId: string, userId: string, hostId?: string): Promise<void> {
   const { error } = await supabase
     .from('session_participants')
     .insert({ session_id: sessionId, user_id: userId });
@@ -131,9 +144,17 @@ export async function joinSession(sessionId: string, userId: string): Promise<vo
     if (error.code === '23505') return;
     throw new Error(`Failed to join session: ${error.message}`);
   }
+
+  // Notify host (fire-and-forget)
+  if (hostId && hostId !== userId) {
+    supabase
+      .from('notifications')
+      .insert({ user_id: hostId, session_id: sessionId, actor_user_id: userId, type: 'join' })
+      .then();
+  }
 }
 
-export async function leaveSession(sessionId: string, userId: string): Promise<void> {
+export async function leaveSession(sessionId: string, userId: string, hostId?: string): Promise<void> {
   const { error } = await supabase
     .from('session_participants')
     .delete()
@@ -141,6 +162,14 @@ export async function leaveSession(sessionId: string, userId: string): Promise<v
     .eq('user_id', userId);
 
   if (error) throw new Error(`Failed to leave session: ${error.message}`);
+
+  // Notify host (fire-and-forget)
+  if (hostId && hostId !== userId) {
+    supabase
+      .from('notifications')
+      .insert({ user_id: hostId, session_id: sessionId, actor_user_id: userId, type: 'leave' })
+      .then();
+  }
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {
@@ -151,6 +180,89 @@ export async function deleteSession(sessionId: string): Promise<void> {
     .eq('id', sessionId);
 
   if (error) throw new Error(`Failed to delete session: ${error.message}`);
+}
+
+// ---- Preferred Locations ----
+
+export async function fetchPreferredLocations(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('user_preferred_locations')
+    .select('location_name')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch preferred locations: ${error.message}`);
+  return (data ?? []).map((row) => row.location_name);
+}
+
+export async function savePreferredLocation(userId: string, locationName: string): Promise<void> {
+  const { error } = await supabase
+    .from('user_preferred_locations')
+    .upsert(
+      { user_id: userId, location_name: locationName },
+      { onConflict: 'user_id,location_name' }
+    );
+
+  if (error) throw new Error(`Failed to save preferred location: ${error.message}`);
+}
+
+// ---- Notifications ----
+
+export interface NotificationItem {
+  id: string;
+  type: 'join' | 'leave';
+  is_read: boolean;
+  created_at: string;
+  actor_name: string;
+  session_title: string;
+  session_id: string;
+}
+
+export async function fetchNotifications(userId: string): Promise<NotificationItem[]> {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select(`
+      id,
+      type,
+      is_read,
+      created_at,
+      session_id,
+      actor:users!actor_user_id(name),
+      session:sessions!session_id(title, court_name)
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) throw new Error(`Failed to fetch notifications: ${error.message}`);
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    type: row.type,
+    is_read: row.is_read,
+    created_at: row.created_at,
+    session_id: row.session_id,
+    actor_name: row.actor?.name ?? 'Someone',
+    session_title: row.session?.title || row.session?.court_name || 'a session',
+  }));
+}
+
+export async function fetchUnreadNotificationCount(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+
+  if (error) return 0;
+  return count ?? 0;
+}
+
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+  await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('id', notificationId);
 }
 
 // ---- Transform DB → UI Model ----

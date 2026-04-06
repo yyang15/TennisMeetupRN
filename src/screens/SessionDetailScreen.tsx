@@ -13,6 +13,7 @@ import { CostRow } from '../components/detail/CostRow';
 import { DescriptionBlock } from '../components/detail/DescriptionBlock';
 import { ContactHostRow } from '../components/detail/ContactHostRow';
 import { StickyJoinButton } from '../components/detail/StickyJoinButton';
+import { Toast } from '../components/Toast';
 import { useSessions } from '../context/SessionContext';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -24,6 +25,13 @@ export function SessionDetailScreen({ route, navigation }: Props) {
   const session = getSession(sessionId);
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setToastVisible(true);
+  }, []);
 
   const joined = isUserJoined(sessionId);
   const isFull = session ? session.players.length >= session.totalSpots : false;
@@ -40,10 +48,11 @@ export function SessionDetailScreen({ route, navigation }: Props) {
     setLoading(true);
     try {
       await joinSession(sessionId);
+      showToast('Joined session 🎾');
     } finally {
       setLoading(false);
     }
-  }, [joinSession, sessionId]);
+  }, [joinSession, sessionId, showToast]);
 
   const handleLeave = useCallback(async () => {
     Alert.alert(
@@ -58,6 +67,7 @@ export function SessionDetailScreen({ route, navigation }: Props) {
             setLoading(true);
             try {
               await leaveSession(sessionId);
+              showToast('Left session');
             } finally {
               setLoading(false);
             }
@@ -104,6 +114,12 @@ export function SessionDetailScreen({ route, navigation }: Props) {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
+
+      <Toast
+        message={toastMessage}
+        visible={toastVisible}
+        onDismiss={() => setToastVisible(false)}
+      />
 
       <Pressable
         onPress={() => navigation.goBack()}

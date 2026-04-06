@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef, ReactNode } from 'react';
 import { Alert } from 'react-native';
 import { Session, Player, ContactMethod } from '../data/mockSessions';
 import { saveUserId, loadUserId } from '../data/storage';
@@ -28,11 +28,17 @@ function sortSessionsForUser(sessions: Session[], userId: string): Session[] {
   return [...joined, ...notJoined];
 }
 
+export interface Notification {
+  id: string;
+  message: string;
+  timestamp: number;
+}
+
 interface SessionContextValue {
   user: CurrentUser | null;
   setUser: (user: CurrentUser) => void;
   sessions: Session[];
-  addSession: (input: api.CreateSessionInput) => Promise<void>;
+  addSession: (input: api.CreateSessionInput) => Promise<string>;
   getSession: (id: string) => Session | undefined;
   joinSession: (sessionId: string) => Promise<void>;
   leaveSession: (sessionId: string) => Promise<void>;
@@ -41,6 +47,8 @@ interface SessionContextValue {
   isUserJoined: (sessionId: string) => boolean;
   isReady: boolean;
   refreshSessions: () => Promise<void>;
+  notifications: Notification[];
+  clearNotifications: () => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -49,6 +57,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<CurrentUser | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const prevSessionsRef = useRef<Session[]>([]);
 
   const refreshSessions = useCallback(async () => {
     try {
@@ -57,6 +67,53 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.warn('Failed to fetch sessions:', e);
     }
+  }, []);
+
+  // Detect player changes on sessions the user hosts
+  useEffect(() => {
+    if (!user || prevSessionsRef.current.length === 0) {
+      prevSessionsRef.current = sessions;
+      return;
+    }
+
+    const newNotifs: Notification[] = [];
+    for (const session of sessions) {
+      if (session.hostId !== user.id) continue;
+      const prev = prevSessionsRef.current.find((s) => s.id === session.id);
+      if (!prev) continue;
+
+      const prevIds = new Set(prev.players.map((p) => p.id));
+      const currIds = new Set(session.players.map((p) => p.id));
+
+      for (const player of session.players) {
+        if (!prevIds.has(player.id) && player.id !== user.id) {
+          newNotifs.push({
+            id: `${session.id}-join-${player.id}-${Date.now()}`,
+            message: `${player.name} joined your session "${session.title || 'Untitled'}"`,
+            timestamp: Date.now(),
+          });
+        }
+      }
+
+      for (const player of prev.players) {
+        if (!currIds.has(player.id) && player.id !== user.id) {
+          newNotifs.push({
+            id: `${session.id}-leave-${player.id}-${Date.now()}`,
+            message: `${player.name} left your session "${session.title || 'Untitled'}"`,
+            timestamp: Date.now(),
+          });
+        }
+      }
+    }
+
+    if (newNotifs.length > 0) {
+      setNotifications((prev) => [...newNotifs, ...prev]);
+    }
+    prevSessionsRef.current = sessions;
+  }, [sessions, user]);
+
+  const clearNotifications = useCallback(() => {
+    setNotifications([]);
   }, []);
 
   // Hydrate on mount: load user ID from AsyncStorage, fetch user from Supabase, fetch sessions
@@ -92,9 +149,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     saveUserId(u.id).catch(() => {});
   }, []);
 
-  const addSession = useCallback(async (input: api.CreateSessionInput) => {
-    await api.createSession(input);
+  const addSession = useCallback(async (input: api.CreateSessionInput): Promise<string> => {
+    const sessionId = await api.createSession(input);
     await refreshSessions();
+    return sessionId;
   }, [refreshSessions]);
 
   const getSession = useCallback(
@@ -111,7 +169,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (session.players.length >= session.totalSpots) return;
 
     try {
-      await api.joinSession(sessionId, user.id);
+      await api.joinSession(sessionId, user.id, session.hostId);
       await refreshSessions();
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Failed to join session');
@@ -127,7 +185,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      await api.leaveSession(sessionId, user.id);
+      await api.leaveSession(sessionId, user.id, session?.hostId);
       await refreshSessions();
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Failed to leave session');
@@ -164,9 +222,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [sessions, user]
   );
 
-  return (
+    return (
     <SessionContext.Provider
-      value={{ user, setUser, sessions, addSession, getSession, joinSession, leaveSession, cancelSession, sortedSessions, isUserJoined, isReady, refreshSessions }}
+      value={{ user, setUser, sessions, addSession, getSession, joinSession, leaveSession, cancelSession, sortedSessions, isUserJoined, isReady, refreshSessions, notifications, clearNotifications }}
     >
       {children}
     </SessionContext.Provider>

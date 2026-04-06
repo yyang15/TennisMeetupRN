@@ -26,6 +26,14 @@ function getTypeColor(type: Session['sessionType']): string {
   return colors.sessionType[type];
 }
 
+function getPlayerSummary(session: Session): string {
+  if (session.players.length === 0) return 'No players yet';
+  const firstName = session.players[0].name.split(' ')[0];
+  const others = session.players.length - 1;
+  if (others === 0) return firstName;
+  return `${firstName} + ${others} ${others === 1 ? 'other' : 'others'}`;
+}
+
 export function SessionCard({ session, onPress }: SessionCardProps) {
   const { animatedStyle, handlePressIn, handlePressOut } = useAnimatedPress(0.98);
   const { user } = useSessions();
@@ -53,8 +61,7 @@ export function SessionCard({ session, onPress }: SessionCardProps) {
                   {session.title ? (
                     <Text style={styles.sessionTitle} numberOfLines={1}>{session.title}</Text>
                   ) : null}
-                  <Text style={styles.time}>{session.time}</Text>
-                  <Text style={styles.date}>{formatDate(session.date)}</Text>
+                  <Text style={styles.time}>{formatDate(session.date).toUpperCase()} {session.time}</Text>
                 </View>
                 <Badge label={session.skillRange} variant="accent" />
               </View>
@@ -70,7 +77,7 @@ export function SessionCard({ session, onPress }: SessionCardProps) {
                 <Text style={styles.distance}>{session.distance}</Text>
               </View>
 
-              {/* Bottom: Spots + Host + Reliability */}
+              {/* Bottom: Spots + Players + Reliability */}
               <View style={styles.bottomRow}>
                 <View style={styles.spotsContainer}>
                   {isFull ? (
@@ -96,6 +103,7 @@ export function SessionCard({ session, onPress }: SessionCardProps) {
                 </View>
 
                 <View style={styles.hostInfo}>
+                  <Text style={styles.playerSummary}>{getPlayerSummary(session)}</Text>
                   <Avatar name={session.hostName} size="sm" />
                   <View style={styles.reliabilityContainer}>
                     {session.reliabilityScore < 70 && (
@@ -167,7 +175,7 @@ const styles = StyleSheet.create({
     ...typography.timeLarge,
     color: colors.textPrimary,
   },
-  date: {
+  playerSummary: {
     ...typography.caption,
     color: colors.textSecondary,
   },
