@@ -65,6 +65,35 @@ cd /Users/yuekunyang/TennisMeetupRN && /usr/local/bin/claude_code/node ./node_mo
 - 如果需要 reload：在 Metro 终端按 `r`，或手机摇一摇
 - 如果加了新 native module（如 expo-location），必须用 `-c` 清缓存重启
 
+## Maestro 自动化测试
+
+自动化 UI 测试 + 截图 + 录制。需要 iOS Simulator 运行 app。
+
+```bash
+# 运行全部测试（5 个 flow）
+export PATH="$PATH:$HOME/.maestro/bin"
+./maestro/run_tests.sh
+
+# 运行单个 flow
+maestro test maestro/01_discover.yaml
+maestro test maestro/03_create_session.yaml
+
+# 带录屏
+maestro record maestro/03_create_session.yaml
+```
+
+测试 flows:
+- `01_discover.yaml` — 验证 Discover 页面核心元素
+- `02_join_session.yaml` — 加入 session + toast 反馈
+- `03_create_session.yaml` — 完整创建流程（填表 → Publish）
+- `04_notifications.yaml` — 铃铛 → 通知列表 → 返回
+- `05_profile.yaml` — Profile 编辑 + Save
+
+前提：
+1. iOS Simulator 已启动（`open -a Simulator`）
+2. Expo app 已在 Simulator 中运行（在 Metro 终端按 `i`）
+3. Maestro 已安装（`$HOME/.maestro/bin/maestro`）
+
 ## Supabase 表
 - `users` — 用户信息（name, skill_level, location, contact_method, contact_value）
 - `sessions` — 球局（host_id, title, session_type, date, time, skill_range, court_name, court_address, total_spots, description）

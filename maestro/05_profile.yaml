@@ -1,0 +1,24 @@
+appId: host.exp.Exponent
+---
+# Flow 5: Profile — tap profile icon, verify form, edit and save
+- launchApp
+- assertVisible: "Discover"
+
+# Tap profile icon
+- tapOn:
+    id: "Profile"
+- takeScreenshot: profile_01_screen
+- assertVisible: "Profile"
+
+# Verify form fields visible
+- assertVisible: "Your Name"
+- assertVisible: "Skill Level"
+- assertVisible: "Location"
+- takeScreenshot: profile_02_form
+
+# Tap Save
+- scrollUntilVisible:
+    element: "Save Changes"
+    direction: DOWN
+- tapOn: "Save Changes"
+- takeScreenshot: profile_03_saved

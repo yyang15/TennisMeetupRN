@@ -1,0 +1,16 @@
+appId: host.exp.Exponent
+---
+# Flow 4: Notifications — tap bell, verify notifications screen
+- launchApp
+- assertVisible: "Discover"
+
+# Tap bell icon
+- tapOn:
+    id: "Notifications.*"
+- takeScreenshot: notif_01_screen
+- assertVisible: "Notifications"
+- takeScreenshot: notif_02_list
+
+# Go back
+- tapOn: "Go back"
+- assertVisible: "Discover"

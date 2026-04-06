@@ -1,0 +1,47 @@
+appId: host.exp.Exponent
+---
+# Flow 3: Create Session — fill form and publish
+- launchApp
+- assertVisible: "Discover"
+
+# Tap Create Session FAB
+- tapOn: "Create Session"
+- takeScreenshot: create_01_empty_form
+
+# Fill title
+- tapOn: "Sunday morning hitting"
+- inputText: "Weekend Rally"
+- takeScreenshot: create_02_title_filled
+
+# Select session type
+- tapOn: "Singles"
+- takeScreenshot: create_03_type_selected
+
+# Quick Pick time
+- tapOn: "Tomorrow 9 AM"
+- takeScreenshot: create_04_time_selected
+
+# Select court
+- scrollUntilVisible:
+    element: "Green Lake Tennis Courts"
+    direction: DOWN
+- tapOn: "Green Lake Tennis Courts"
+- takeScreenshot: create_05_court_selected
+
+# Select skill level
+- scrollUntilVisible:
+    element: "Intermediate"
+    direction: DOWN
+- tapOn: "Intermediate"
+- takeScreenshot: create_06_skill_selected
+
+# Select player limit
+- tapOn: "2 players"
+- takeScreenshot: create_07_limit_selected
+
+# Publish
+- scrollUntilVisible:
+    element: "Publish Session"
+    direction: DOWN
+- tapOn: "Publish Session"
+- takeScreenshot: create_08_published

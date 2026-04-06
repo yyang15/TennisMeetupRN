@@ -1,0 +1,21 @@
+appId: host.exp.Exponent
+---
+# Flow 2: Join Session — tap a session card, verify detail, tap join
+- launchApp
+- assertVisible: "Discover"
+- takeScreenshot: join_01_discover
+
+# Tap first session card
+- tapOn:
+    text: "spot.*left"
+    index: 0
+- takeScreenshot: join_02_session_detail
+
+# Tap Join if available
+- runFlow:
+    when:
+      visible: "Join Session"
+    commands:
+      - tapOn: "Join Session"
+      - takeScreenshot: join_03_after_join
+      - assertVisible: "Joined session"
