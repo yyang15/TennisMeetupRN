@@ -1,47 +1,43 @@
-appId: host.exp.Exponent
+# Create session flow — assumes app is on Discover screen
 ---
-# Flow 3: Create Session — fill form and publish
-- launchApp
-- assertVisible: "Discover"
-
 # Tap Create Session FAB
 - tapOn: "Create Session"
-- takeScreenshot: create_01_empty_form
+- takeScreenshot: create_01_form
 
 # Fill title
-- tapOn: "Sunday morning hitting"
+- tapOn:
+    text: ".*morning.*"
 - inputText: "Weekend Rally"
-- takeScreenshot: create_02_title_filled
+- takeScreenshot: create_02_title
 
-# Select session type
+# Select Singles
 - tapOn: "Singles"
-- takeScreenshot: create_03_type_selected
 
-# Quick Pick time
-- tapOn: "Tomorrow 9 AM"
-- takeScreenshot: create_04_time_selected
+# Pick a Quick Pick time
+- tapOn:
+    text: "Tomorrow.*"
+    index: 0
+- takeScreenshot: create_03_time
 
-# Select court
+# Select a court
 - scrollUntilVisible:
     element: "Green Lake Tennis Courts"
     direction: DOWN
 - tapOn: "Green Lake Tennis Courts"
-- takeScreenshot: create_05_court_selected
 
-# Select skill level
+# Select skill
 - scrollUntilVisible:
     element: "Intermediate"
     direction: DOWN
 - tapOn: "Intermediate"
-- takeScreenshot: create_06_skill_selected
 
-# Select player limit
+# Select players
 - tapOn: "2 players"
-- takeScreenshot: create_07_limit_selected
+- takeScreenshot: create_04_filled
 
 # Publish
 - scrollUntilVisible:
     element: "Publish Session"
     direction: DOWN
 - tapOn: "Publish Session"
-- takeScreenshot: create_08_published
+- takeScreenshot: create_05_published

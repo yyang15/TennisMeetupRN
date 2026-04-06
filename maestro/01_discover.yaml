@@ -1,7 +1,6 @@
-appId: host.exp.Exponent
+# Full app walkthrough — assumes app is already open on Discover screen
+# Run with: maestro test maestro/01_discover.yaml
 ---
-# Flow 1: Discover Screen — verify core elements
-- launchApp
 - assertVisible: "Discover"
 - assertVisible: "Create Session"
 - takeScreenshot: discover_home
