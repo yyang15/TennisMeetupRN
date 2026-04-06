@@ -85,7 +85,13 @@ cd /Users/yuekunyang/TennisMeetupRN && /usr/local/bin/claude_code/node ./node_mo
 - Chip 高对比度（surface bg，accent active，700 bold）
 - Nearby Courts 搜索（expo-location + Overpass API + 反向地理编码 + 聚类去重）
 
-## 已知 PM 反馈（下一轮可做）
+## 结束 Session 流程
+
+每次 session 结束前必须执行：
+1. `sl status` 确认无遗漏文件
+2. `sl add` 新文件 → `sl commit -m "..."` 提交
+3. `sl push --to main` 推送到 GitHub
+4. 确认 push 成功后再告知用户 session 结束
 - P0: 表单太长，关键按钮不可见 → 考虑折叠 All Courts 列表
 - P0: 没有「取消创建」确认 → 返回时弹出 "Discard changes?"
 - P1: Profile 和 Create Session 的 skill 体系不一致（NTRP vs Beginner/Intermediate/Advanced）
