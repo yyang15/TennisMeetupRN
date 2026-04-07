@@ -67,32 +67,41 @@ cd /Users/yuekunyang/TennisMeetupRN && /usr/local/bin/claude_code/node ./node_mo
 
 ## Maestro 自动化测试
 
-自动化 UI 测试 + 截图 + 录制。需要 iOS Simulator 运行 app。
+**重要：必须使用 dev build，不能用 Expo Go。Maestro 看不到 Expo Go 内部的 RN 元素。**
 
+### 构建 dev build
 ```bash
-# 运行全部测试（5 个 flow）
-export PATH="$PATH:$HOME/.maestro/bin"
-./maestro/run_tests.sh
+# 首次构建（约 5 分钟）
+cd /Users/yuekunyang/TennisMeetupRN
+PATH="/usr/local/bin/claude_code:/opt/homebrew/bin:/opt/homebrew/Cellar/cocoapods/1.16.2_2/bin:$PATH" \
+  /usr/local/bin/claude_code/node ./node_modules/.bin/expo run:ios
 
-# 运行单个 flow
-maestro test maestro/01_discover.yaml
-maestro test maestro/03_create_session.yaml
-
-# 带录屏
-maestro record maestro/03_create_session.yaml
+# Pod install（如果需要）
+cd ios && PATH="/usr/local/bin/claude_code:$PATH" /opt/homebrew/Cellar/cocoapods/1.16.2_2/bin/pod install
 ```
 
-测试 flows:
-- `01_discover.yaml` — 验证 Discover 页面核心元素
-- `02_join_session.yaml` — 加入 session + toast 反馈
-- `03_create_session.yaml` — 完整创建流程（填表 → Publish）
-- `04_notifications.yaml` — 铃铛 → 通知列表 → 返回
-- `05_profile.yaml` — Profile 编辑 + Save
+### 运行测试 + 录屏
+```bash
+# 全 app walkthrough + 录屏
+/usr/local/bin/claude_code/node maestro/record.js
 
-前提：
-1. iOS Simulator 已启动（`open -a Simulator`）
-2. Expo app 已在 Simulator 中运行（在 Metro 终端按 `i`）
-3. Maestro 已安装（`$HOME/.maestro/bin/maestro`）
+# 单个 flow
+export PATH="$PATH:$HOME/.maestro/bin"
+maestro test maestro/full_walkthrough.yaml
+
+# 查看 Maestro 能看到的 UI 元素
+maestro hierarchy
+```
+
+### 关键文件
+- `maestro/full_walkthrough.yaml` — 完整 app 走查（onboarding → discover → join → create → profile）
+- `maestro/record.js` — Node.js 录屏管理器（xcrun simctl + Maestro）
+- `maestro/test_and_record.sh` — 一键录屏脚本
+- App bundle ID: `com.tennismeetup.app`
+
+### 待解决
+- TextInput 定位问题：Maestro 的 accessibilityText 把整个页面内容扁平化，需要用 `accessibilityLabel` 区分输入框
+- react-native-maps 已卸载（SDK 52 新架构不兼容），地图用 WebView + Leaflet
 
 ## Supabase 表
 - `users` — 用户信息（name, skill_level, location, contact_method, contact_value）
