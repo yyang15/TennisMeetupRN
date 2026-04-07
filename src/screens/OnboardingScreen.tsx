@@ -117,6 +117,8 @@ export function OnboardingScreen() {
           <View style={styles.field}>
             <SectionLabel label="Your Name" />
             <TextInput
+              testID="input-name"
+              accessibilityLabel="Name input"
               style={styles.textInput}
               value={name}
               onChangeText={setName}
@@ -145,6 +147,8 @@ export function OnboardingScreen() {
           <View style={styles.field}>
             <SectionLabel label="Location" />
             <TextInput
+              testID="input-location"
+              accessibilityLabel="Location input"
               style={styles.textInput}
               value={location}
               onChangeText={setLocation}
@@ -172,6 +176,8 @@ export function OnboardingScreen() {
           <View style={styles.field}>
             <SectionLabel label="Contact Info" />
             <TextInput
+              testID="input-contact"
+              accessibilityLabel="Contact input"
               style={styles.textInput}
               value={contactValue}
               onChangeText={setContactValue}

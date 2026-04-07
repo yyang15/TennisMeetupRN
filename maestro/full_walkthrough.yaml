@@ -1,42 +1,44 @@
 appId: com.tennismeetup.app
 ---
 # TennisMeetup — Full App Walkthrough
+# Handles both fresh app (onboarding) and returning user (discover)
 
-# ── Navigate to Discover first (handle any starting screen) ──
+# ── ONBOARDING (if needed) ──
 - runFlow:
     when:
-      visible: "Go back"
+      visible: "Get Started"
     commands:
-      - tapOn: "Go back"
-- runFlow:
-    when:
-      visible: "Go back"
-    commands:
-      - tapOn: "Go back"
+      - takeScreenshot: 00_onboarding
+      - tapOn:
+          text: "Name input"
+      - inputText: "Test User"
+      - tapOn: "Intermediate"
+      - tapOn:
+          text: "Location input"
+      - inputText: "Seattle, WA"
+      - tapOn: "Phone"
+      - tapOn:
+          text: "Contact input"
+      - inputText: "2065551234"
+      - scrollUntilVisible:
+          element: "Get Started"
+          direction: DOWN
+      - takeScreenshot: 01_onboarding_filled
+      - tapOn: "Get Started"
 
 # ── DISCOVER ──
-- takeScreenshot: 01_discover_home
 - extendedWaitUntil:
     visible: "Create Session"
-    timeout: 10000
+    timeout: 15000
+- takeScreenshot: 02_discover_home
 
 - swipe:
     direction: UP
     duration: 1000
-- takeScreenshot: 02_discover_scrolled
+- takeScreenshot: 03_discover_scrolled
 - swipe:
     direction: DOWN
     duration: 1000
-
-# ── NOTIFICATIONS ──
-- tapOn:
-    text: "Notifications.*"
-    optional: true
-- takeScreenshot: 03_notifications
-- back
-- extendedWaitUntil:
-    visible: "Create Session"
-    timeout: 5000
 
 # ── PROFILE ──
 - tapOn:
