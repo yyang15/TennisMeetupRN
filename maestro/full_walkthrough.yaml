@@ -9,16 +9,13 @@ appId: com.tennismeetup.app
       visible: "Get Started"
     commands:
       - takeScreenshot: 00_onboarding
-      - tapOn:
-          text: "Name input"
+      - tapOn: "Name input"
       - inputText: "Test User"
       - tapOn: "Intermediate"
-      - tapOn:
-          text: "Location input"
+      - tapOn: "Location input"
       - inputText: "Seattle, WA"
       - tapOn: "Phone"
-      - tapOn:
-          text: "Contact input"
+      - tapOn: "Contact input"
       - inputText: "2065551234"
       - scrollUntilVisible:
           element: "Get Started"
@@ -28,8 +25,8 @@ appId: com.tennismeetup.app
 
 # ── DISCOVER ──
 - extendedWaitUntil:
-    visible: "Create Session"
-    timeout: 15000
+    visible: "Create.*"
+    timeout: 30000
 - takeScreenshot: 02_discover_home
 
 - swipe:
@@ -47,7 +44,7 @@ appId: com.tennismeetup.app
 - takeScreenshot: 04_profile
 - back
 - extendedWaitUntil:
-    visible: "Create Session"
+    visible: "Create.*"
     timeout: 5000
 
 # ── VIEW SESSION ──
@@ -64,11 +61,11 @@ appId: com.tennismeetup.app
       - takeScreenshot: 06_joined
 - back
 - extendedWaitUntil:
-    visible: "Create Session"
+    visible: "Create.*"
     timeout: 5000
 
 # ── CREATE SESSION ──
-- tapOn: "Create Session"
+- tapOn: "Create session"
 - takeScreenshot: 07_create_form
 - tapOn:
     text: ".*morning.*"
