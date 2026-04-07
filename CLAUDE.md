@@ -123,6 +123,16 @@ maestro hierarchy
 - Chip 高对比度（surface bg，accent active，700 bold）
 - Nearby Courts 搜索（expo-location + Overpass API + 反向地理编码 + 聚类去重）
 
+## 反循环规则（HARD RULE）
+
+**同一个问题最多尝试 3 次。** 如果 3 次修复后问题仍未解决：
+1. 停下来
+2. 分析根因（不是症状）
+3. 告知用户当前状态 + 根因 + 可选方案
+4. 等用户决定方向后再行动
+
+**绝对禁止**：在同一个问题上循环 5 次以上。
+
 ## 结束 Session 流程
 
 每次 session 结束前必须执行：
