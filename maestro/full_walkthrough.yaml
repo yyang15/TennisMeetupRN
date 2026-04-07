@@ -1,0 +1,109 @@
+appId: com.tennismeetup.app
+---
+# TennisMeetup — Full App Walkthrough
+
+# ── Navigate to Discover first (handle any starting screen) ──
+- runFlow:
+    when:
+      visible: "Go back"
+    commands:
+      - tapOn: "Go back"
+- runFlow:
+    when:
+      visible: "Go back"
+    commands:
+      - tapOn: "Go back"
+
+# ── DISCOVER ──
+- takeScreenshot: 01_discover_home
+- extendedWaitUntil:
+    visible: "Create Session"
+    timeout: 10000
+
+- swipe:
+    direction: UP
+    duration: 1000
+- takeScreenshot: 02_discover_scrolled
+- swipe:
+    direction: DOWN
+    duration: 1000
+
+# ── NOTIFICATIONS ──
+- tapOn:
+    text: "Notifications.*"
+    optional: true
+- takeScreenshot: 03_notifications
+- back
+- extendedWaitUntil:
+    visible: "Create Session"
+    timeout: 5000
+
+# ── PROFILE ──
+- tapOn:
+    text: "Profile"
+    optional: true
+- takeScreenshot: 04_profile
+- back
+- extendedWaitUntil:
+    visible: "Create Session"
+    timeout: 5000
+
+# ── VIEW SESSION ──
+- tapOn:
+    index: 0
+    text: ".*left.*"
+    optional: true
+- takeScreenshot: 05_session_detail
+- runFlow:
+    when:
+      visible: "Join Session"
+    commands:
+      - tapOn: "Join Session"
+      - takeScreenshot: 06_joined
+- back
+- extendedWaitUntil:
+    visible: "Create Session"
+    timeout: 5000
+
+# ── CREATE SESSION ──
+- tapOn: "Create Session"
+- takeScreenshot: 07_create_form
+- tapOn:
+    text: ".*morning.*"
+    optional: true
+- inputText: "Weekend Rally"
+- tapOn:
+    text: "Singles"
+    optional: true
+- tapOn:
+    text: "Tomorrow.*"
+    index: 0
+    optional: true
+- takeScreenshot: 08_create_when
+- swipe:
+    direction: UP
+    duration: 1000
+- tapOn:
+    text: "Green Lake.*"
+    optional: true
+- takeScreenshot: 09_create_court
+- swipe:
+    direction: UP
+    duration: 1000
+- tapOn:
+    text: "Intermediate"
+    optional: true
+- tapOn:
+    text: "2 players"
+    optional: true
+- takeScreenshot: 10_create_filled
+- swipe:
+    direction: UP
+    duration: 1000
+- tapOn:
+    text: "Publish Session"
+    optional: true
+- takeScreenshot: 11_published
+
+# ── END ──
+- takeScreenshot: 12_final
