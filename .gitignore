@@ -11,4 +11,6 @@ web-build/
 .DS_Store
 .env
 android/
-ios/
+ios/Pods/
+ios/build/
+ios/DerivedData/
