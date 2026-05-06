@@ -14,17 +14,17 @@ interface TopBarProps {
 export function TopBar({ location, notificationCount, onBellPress, onProfilePress }: TopBarProps) {
   return (
     <View style={styles.container}>
-      {/* Location pill */}
+      {/* Left: Location pill */}
       <Pressable style={styles.locationPill}>
         <Text style={styles.locationIcon}>📍</Text>
-        <Text style={styles.locationText}>{location}</Text>
+        <Text style={styles.locationText} numberOfLines={1} ellipsizeMode="tail">{location}</Text>
         <Ionicons name="chevron-down" size={14} color={colors.textSecondary} />
       </Pressable>
 
-      {/* Title */}
+      {/* Center: Title */}
       <Text style={styles.title}>Discover</Text>
 
-      {/* Profile + Notification */}
+      {/* Right: Profile + Notification */}
       <View style={styles.rightIcons}>
         <Pressable style={styles.iconButton} onPress={onProfilePress} accessibilityLabel="Profile" accessibilityRole="button">
           <Ionicons name="person-circle-outline" size={24} color={colors.textPrimary} />
@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.md,
   },
@@ -54,6 +53,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs + 2,
     borderRadius: radius.full,
     gap: spacing.xs,
+    flex: 1,
+    maxWidth: 150,
   },
   locationIcon: {
     fontSize: 14,
@@ -62,20 +63,20 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textPrimary,
     fontWeight: '500',
+    flexShrink: 1,
   },
   title: {
     ...typography.h3,
     color: colors.textPrimary,
-    position: 'absolute',
-    left: 0,
-    right: 0,
+    flex: 1,
     textAlign: 'center',
-    zIndex: -1,
   },
   rightIcons: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   iconButton: {
     width: 40,

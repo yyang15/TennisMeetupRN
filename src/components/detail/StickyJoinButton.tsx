@@ -12,10 +12,9 @@ interface StickyJoinButtonProps {
   onJoin: () => void;
   onLeave: () => void;
   onCancel?: () => void;
-  onShare: () => void;
 }
 
-export function StickyJoinButton({ state, onJoin, onLeave, onCancel, onShare }: StickyJoinButtonProps) {
+export function StickyJoinButton({ state, onJoin, onLeave, onCancel }: StickyJoinButtonProps) {
   const insets = useSafeAreaInsets();
 
   if (state === 'host') {
@@ -28,10 +27,6 @@ export function StickyJoinButton({ state, onJoin, onLeave, onCancel, onShare }: 
           size="lg"
           style={styles.button}
         />
-        <Pressable onPress={onShare} style={styles.shareRow}>
-          <Ionicons name="share-outline" size={16} color={colors.textSecondary} />
-          <Text style={styles.shareText}>Share Session</Text>
-        </Pressable>
       </View>
     );
   }
@@ -79,10 +74,6 @@ export function StickyJoinButton({ state, onJoin, onLeave, onCancel, onShare }: 
         style={styles.button}
       />
 
-      <Pressable onPress={onShare} style={styles.shareRow}>
-        <Ionicons name="share-outline" size={16} color={colors.textSecondary} />
-        <Text style={styles.shareText}>Share Session</Text>
-      </Pressable>
     </View>
   );
 }
@@ -97,16 +88,5 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-  },
-  shareRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingTop: spacing.md,
-  },
-  shareText: {
-    ...typography.captionMedium,
-    color: colors.textSecondary,
   },
 });

@@ -41,6 +41,8 @@ interface SessionContextValue {
   isUserJoined: (sessionId: string) => boolean;
   isReady: boolean;
   refreshSessions: () => Promise<void>;
+  sessionError: string | null;
+  clearSessionError: () => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -49,13 +51,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<CurrentUser | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+
+  const clearSessionError = useCallback(() => setSessionError(null), []);
 
   const refreshSessions = useCallback(async () => {
     try {
       const data = await api.fetchSessions();
       setSessions(data);
-    } catch (e) {
+      setSessionError(null);
+    } catch (e: any) {
       console.warn('Failed to fetch sessions:', e);
+      setSessionError('Could not load sessions. Check your connection and pull to refresh.');
     }
   }, []);
 
@@ -169,7 +176,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
     return (
     <SessionContext.Provider
-      value={{ user, setUser, sessions, addSession, getSession, joinSession, leaveSession, cancelSession, sortedSessions, isUserJoined, isReady, refreshSessions }}
+      value={{ user, setUser, sessions, addSession, getSession, joinSession, leaveSession, cancelSession, sortedSessions, isUserJoined, isReady, refreshSessions, sessionError, clearSessionError }}
     >
       {children}
     </SessionContext.Provider>

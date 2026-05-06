@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Location from 'expo-location';
 import { colors, spacing, radius, typography } from '../theme';
 import { Chip } from '../components/Chip';
 import { Button } from '../components/Button';
@@ -47,8 +48,28 @@ export function OnboardingScreen() {
   const [location, setLocation] = useState('');
   const [contactMethod, setContactMethod] = useState<ContactMethod | null>(null);
   const [contactValue, setContactValue] = useState('');
-
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-fill location from GPS
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const [place] = await Location.reverseGeocodeAsync({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+        if (place) {
+          const city = place.city || place.subregion || '';
+          const region = place.region || '';
+          const label = city && region && city !== region ? `${city}, ${region}` : city || region;
+          if (label) setLocation(label);
+        }
+      } catch {}
+    })();
+  }, []);
 
   const handleSubmit = useCallback(async () => {
     if (submitting) return;
@@ -227,16 +248,16 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.base,
     paddingBottom: spacing.xl,
-    gap: spacing.xl,
+    gap: spacing.lg,
   },
   header: {
     alignItems: 'center',
-    paddingTop: spacing.xxxl,
-    paddingBottom: spacing.lg,
-    gap: spacing.sm,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.xs,
   },
   emoji: {
-    fontSize: 48,
+    fontSize: 36,
   },
   title: {
     ...typography.h1,

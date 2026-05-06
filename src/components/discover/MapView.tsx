@@ -7,6 +7,8 @@ import { COURT_COORDINATES } from '../../data/courtCoordinates';
 
 interface MapViewProps {
   sessions: Session[];
+  userLat?: number | null;
+  userLon?: number | null;
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -16,7 +18,7 @@ const TYPE_COLORS: Record<string, string> = {
   coaching: colors.sessionType.coaching,
 };
 
-export function MapView({ sessions }: MapViewProps) {
+export function MapView({ sessions, userLat, userLon }: MapViewProps) {
   const html = useMemo(() => {
     const markers: { lat: number; lon: number; color: string; name: string; type: string; time: string }[] = [];
     const seen = new Set<string>();
@@ -35,7 +37,9 @@ export function MapView({ sessions }: MapViewProps) {
       });
     }
 
-    const center = markers.length > 0
+    const center = userLat && userLon
+      ? `[${userLat}, ${userLon}]`
+      : markers.length > 0
       ? `[${markers.reduce((a, m) => a + m.lat, 0) / markers.length}, ${markers.reduce((a, m) => a + m.lon, 0) / markers.length}]`
       : '[47.6362, -122.3121]';
 

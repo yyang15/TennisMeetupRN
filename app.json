@@ -23,7 +23,13 @@
       "package": "com.tennismeetup.app"
     },
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "TennisMeetup uses your location to show nearby courts and calculate distances to sessions."
+        }
+      ]
     ],
     "extra": {
       "eas": {

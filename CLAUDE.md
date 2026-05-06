@@ -1,147 +1,166 @@
 # TennisMeetup RN
 
-## 技术栈
+## Tech Stack
 - React Native (Expo SDK 52), TypeScript
-- 函数式组件 + Hooks
-- 深色主题
-- Supabase 后端（users, sessions, session_participants, notifications, user_preferred_locations）
-- React Context 状态管理
-- AsyncStorage 存储本地用户 ID
-- expo-location（附近球场搜索）
+- Functional components + Hooks
+- Dark theme
+- Supabase backend (users, sessions, session_participants, notifications, user_preferred_locations)
+- React Context for state management
+- AsyncStorage for local user ID
+- expo-location for nearby courts search
 
-## 工作流规则
+## Workflow Rules
 
-### PM → Programmer → QA 开发循环
-每轮开发必须按以下流程执行：
+### PM → Programmer → QA Development Loop
+Every development cycle must follow this process:
 
-**1. PM Agent（产品经理）**
-- 审查当前所有功能和代码
-- 从真实用户视角找出 UX 问题
-- 提出功能改进建议，按 Impact × Effort 排优先级
-- 给出一个 "Quick Win"（最小改动、最大收益）
+**1. PM Agent**
+- Review all current features and code
+- Identify UX issues from a real user perspective
+- Propose improvements prioritized by Impact × Effort
+- Provide one "Quick Win" (minimum change, maximum value)
 
-**2. Programmer（我来实现）**
-- 用户从 PM 建议中选择要实现的功能
-- 按优先级实现选定的功能
-- TypeScript type-check 必须通过
+**2. Programmer**
+- User selects which feature to implement from PM suggestions
+- Implement in priority order
+- TypeScript type-check must pass
 
-**3. QA Agent（质量保证）**
-- 逐行审查新实现的代码
-- 编写测试计划，验证功能正确性
-- 检查边界情况、竞态条件、错误处理
-- 报告 bug 并按严重程度分级
+**3. QA Agent**
+- Line-by-line review of newly implemented code
+- Write test plan to verify correctness
+- Check edge cases, race conditions, error handling
+- Report bugs by severity
 
-**4. 修复 QA 发现的问题**
-- 修复所有中等及以上严重度的 bug
-- 重新 type-check
+**4. Fix QA Issues**
+- Fix all medium severity and above bugs
+- Re-run type-check
 
-### 代码审查流程（非 PM-QA 循环时使用）
-每次生成或修改代码后，必须：
-1. 并行启动两个 Agent 审查代码（一个关注架构/可维护性，一个关注 bug/性能）
-2. 收集两个 Agent 的反馈
-3. 逐条 address 所有反馈
-4. 重复审查直到没有更多反馈为止
+### Code Review Process (used outside the PM-QA loop)
+After every code change:
+1. Spawn two agents in parallel (one focused on architecture/maintainability, one on bugs/performance)
+2. Collect feedback from both agents
+3. Address every item of feedback
+4. Repeat review until no further feedback
 
-## 约定
-- TypeScript type-check 命令：`cd /Users/yuekunyang/TennisMeetupRN && /usr/local/bin/claude_code/node ./node_modules/.bin/tsc --noEmit`
-- npm 安装依赖：`cd /Users/yuekunyang/TennisMeetupRN && PATH="/usr/local/bin/claude_code:$PATH" /opt/homebrew/bin/npm install <package>`
-- 启动 Expo：`cd /Users/yuekunyang/TennisMeetupRN && /usr/local/bin/claude_code/node ./node_modules/.bin/expo start`
+## Conventions
+- TypeScript type-check: `cd /Users/yuekunyang/TennisMeetupRN && /opt/homebrew/opt/node@22/bin/node ./node_modules/.bin/tsc --noEmit`
+- npm install: `cd /Users/yuekunyang/TennisMeetupRN && PATH="/opt/homebrew/opt/node@22/bin:$PATH" npm install <package>`
+- Start Expo: `cd /Users/yuekunyang/TennisMeetupRN && PATH="/opt/homebrew/opt/node@22/bin:$PATH" npx expo start`
 
-## 本地测试流程
+## Local Testing
 
-用户说"帮我测试"或"怎么测试"时，直接执行以下步骤：
+When user asks to test the app:
 
 ```bash
-# 1. 启动 Metro（加 -c 清缓存，适用于新增 native module 后）
-cd /Users/yuekunyang/TennisMeetupRN && /usr/local/bin/claude_code/node ./node_modules/.bin/expo start -c
+# 1. Start Metro with cache clear (required after adding new native modules)
+cd /Users/yuekunyang/TennisMeetupRN && PATH="/opt/homebrew/opt/node@22/bin:$PATH" npx expo start -c
 
-# 2. 普通启动（无新 native module 时）
-cd /Users/yuekunyang/TennisMeetupRN && /usr/local/bin/claude_code/node ./node_modules/.bin/expo start
+# 2. Normal start (no new native modules)
+cd /Users/yuekunyang/TennisMeetupRN && PATH="/opt/homebrew/opt/node@22/bin:$PATH" npx expo start
 ```
 
-- 必须用 `interactive: true` 模式执行
-- Metro 启动后，用户在手机上用 Expo Go 扫二维码测试
-- 地址通常是 `exp://10.0.0.47:8081`
-- 如果需要 reload：在 Metro 终端按 `r`，或手机摇一摇
-- 如果加了新 native module（如 expo-location），必须用 `-c` 清缓存重启
+- After Metro starts, user scans QR code with Expo Go on their phone
+- Address is usually `exp://10.0.0.47:8081`
+- To reload: press `r` in Metro terminal, or shake the phone
+- If new native module was added (e.g. expo-location), must use `-c` to clear cache
 
-## Maestro 自动化测试
+## Maestro Automated Testing
 
-**重要：必须使用 dev build，不能用 Expo Go。Maestro 看不到 Expo Go 内部的 RN 元素。**
+**Important: Must use dev build, not Expo Go. Maestro cannot see RN elements inside Expo Go.**
 
-### 构建 dev build
+### Build dev build
 ```bash
-# 首次构建（约 5 分钟）
+# First build (~5 min)
 cd /Users/yuekunyang/TennisMeetupRN
-PATH="/usr/local/bin/claude_code:/opt/homebrew/bin:/opt/homebrew/Cellar/cocoapods/1.16.2_2/bin:$PATH" \
-  /usr/local/bin/claude_code/node ./node_modules/.bin/expo run:ios
+PATH="/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:/opt/homebrew/Cellar/cocoapods/1.16.2_2/bin:$PATH" \
+  npx expo run:ios
 
-# Pod install（如果需要）
-cd ios && PATH="/usr/local/bin/claude_code:$PATH" /opt/homebrew/Cellar/cocoapods/1.16.2_2/bin/pod install
+# Pod install (if needed)
+cd ios && PATH="/opt/homebrew/bin:$PATH" /opt/homebrew/Cellar/cocoapods/1.16.2_2/bin/pod install
 ```
 
-### 运行测试 + 录屏
+### Run tests + record
 ```bash
-# 全 app walkthrough + 录屏
-/usr/local/bin/claude_code/node maestro/record.js
+# Full app walkthrough + recording
+PATH="/opt/homebrew/opt/node@22/bin:$PATH" node maestro/record.js
 
-# 单个 flow
+# Single flow
 export PATH="$PATH:$HOME/.maestro/bin"
 maestro test maestro/full_walkthrough.yaml
 
-# 查看 Maestro 能看到的 UI 元素
+# View UI elements Maestro can see
 maestro hierarchy
 ```
 
-### 关键文件
-- `maestro/full_walkthrough.yaml` — 完整 app 走查（onboarding → discover → join → create → profile）
-- `maestro/record.js` — Node.js 录屏管理器（xcrun simctl + Maestro）
-- `maestro/test_and_record.sh` — 一键录屏脚本
+### Key files
+- `maestro/full_walkthrough.yaml` — full app walkthrough (onboarding → discover → join → create → profile)
+- `maestro/record.js` — Node.js recording manager (xcrun simctl + Maestro)
+- `maestro/test_and_record.sh` — one-click recording script
 - App bundle ID: `com.tennismeetup.app`
 
-### 待解决
-- TextInput 定位问题：Maestro 的 accessibilityText 把整个页面内容扁平化，需要用 `accessibilityLabel` 区分输入框
-- react-native-maps 已卸载（SDK 52 新架构不兼容），地图用 WebView + Leaflet
+### Known Issues
+- TextInput targeting: Maestro's accessibilityText flattens entire page content, need `accessibilityLabel` to distinguish inputs
+- react-native-maps removed (incompatible with SDK 52 new architecture), map uses WebView + Leaflet
 
-## Supabase 表
-- `users` — 用户信息（name, skill_level, location, contact_method, contact_value）
-- `sessions` — 球局（host_id, title, session_type, date, time, skill_range, court_name, court_address, total_spots, description）
-- `session_participants` — 参加者（session_id, user_id），ON DELETE CASCADE
-- `notifications` — 通知（user_id=收件人, session_id, actor_user_id=触发者, type=join|leave, is_read, created_at）
-- `user_preferred_locations` — 常用球场（user_id, location_name, UNIQUE(user_id, location_name)）
-- SQL migrations 在 `supabase_migrations/` 目录
+## Supabase Tables
+- `users` — user info (name, skill_level, location, contact_method, contact_value)
+- `sessions` — game sessions (host_id, title, session_type, date, time, skill_range, court_name, court_address, total_spots, description)
+- `session_participants` — participants (session_id, user_id), ON DELETE CASCADE
+- `notifications` — notifications (user_id=recipient, session_id, actor_user_id=trigger, type=join|leave, is_read, created_at)
+- `user_preferred_locations` — saved courts (user_id, location_name, UNIQUE(user_id, location_name))
+- SQL migrations in `supabase_migrations/` directory
 
-## 已实现功能
-- Onboarding（用户注册）
-- Discover（发现球局 + 地图 + 筛选）
-- Create Session（Quick Pick 时间、简化 Skill、Preferred Locations、Find Nearby Courts）
-- Session Detail（加入/离开/取消 + Toast 反馈）
-- Notifications（DB-backed，unread badge，mark-as-read，bell → 通知列表页）
-- Profile（查看/编辑个人信息 + Toast 反馈）
-- FAB 按钮 "+ Create Session"
-- Session Card 优化（"TODAY 6:00 PM" 格式 + "Kevin + 2 others" 玩家摘要）
-- Chip 高对比度（surface bg，accent active，700 bold）
-- Nearby Courts 搜索（expo-location + Overpass API + 反向地理编码 + 聚类去重）
+## Implemented Features
+- Onboarding (user registration)
+- Discover (browse sessions + map + filters)
+- Create Session (Quick Pick time, simplified Skill, Preferred Locations, Find Nearby Courts)
+- Session Detail (join/leave/cancel + Toast feedback)
+- Notifications (DB-backed, unread badge, mark-as-read, bell → notifications list)
+- Profile (view/edit personal info + Toast feedback)
+- FAB button "+ Create Session"
+- Session Card improvements ("TODAY 6:00 PM" format + "Kevin + 2 others" player summary)
+- High contrast Chips (surface bg, accent active, 700 bold)
+- Nearby Courts search (expo-location + Overpass API + reverse geocoding + cluster dedup)
 
-## 反循环规则（HARD RULE）
+## Anti-Loop Rule (HARD RULE)
 
-**同一个问题最多尝试 3 次。** 如果 3 次修复后问题仍未解决：
-1. 停下来
-2. 分析根因（不是症状）
-3. 告知用户当前状态 + 根因 + 可选方案
-4. 等用户决定方向后再行动
+**Maximum 3 attempts on the same problem.** If still unresolved after 3 tries:
+1. Stop
+2. Analyze root cause (not symptoms)
+3. Tell user: current state + root cause + options
+4. Wait for user direction before acting
 
-**绝对禁止**：在同一个问题上循环 5 次以上。
+**Never loop 5+ times on the same issue.**
 
-## 结束 Session 流程
+## Improvement Plan (code review 2026-05-05)
 
-每次 session 结束前必须执行：
-1. `sl status` 确认无遗漏文件
-2. `sl add` 新文件 → `sl commit -m "..."` 提交
-3. `sl push --to main` 推送到 GitHub
-4. 确认 push 成功后再告知用户 session 结束
-- P0: 表单太长，关键按钮不可见 → 考虑折叠 All Courts 列表
-- P1: Profile 和 Create Session 的 skill 体系不一致（NTRP vs Beginner/Intermediate/Advanced）
-- P2: Player Limit 只有 2 和 4 → 加上 6、8 选项
-- P2: 通知空状态引导 → "Host a session to get notified when players join"
-- P2: Session Card 的 typePip 太小 → 换成文字标签
+### P0 — Crashes & Broken Features
+- [ ] Cost field never displayed — sessions table has cost column but SessionDetailScreen never renders it
+- [ ] Share button shows "coming soon" — remove or implement
+- [ ] Silent API failures — network errors swallowed by empty `catch {}`, users see stale data with no explanation
+- [ ] Location permission failure is silent — distance calculation stops with no user feedback
+- [ ] Form too long, key buttons hidden below fold — consider collapsing the All Courts list
+
+### P1 — Major UX Gaps
+- [ ] No profile edit screen — users can set up profile in onboarding but can never change it
+- [ ] Skill level inconsistency — onboarding uses NTRP ranges, create session uses Beginner/Intermediate/Advanced
+- [ ] Player limit only 2 or 4 — add 6 and 8 options for larger groups
+- [ ] No past sessions history — users cannot see games they have already played
+- [ ] No real-time updates — sessions list only refreshes on manual pull-down
+
+### P2 — Code Quality & Polish
+- [ ] 7 courts hard-coded in component — move to `data/courts.ts`
+- [ ] Session type magic strings scattered across files — consolidate into a constants file
+- [ ] SessionContext too large (14 values) — split into UserContext + SessionsContext
+- [ ] No loading skeletons — DiscoverScreen shows empty state while loading instead of skeleton placeholders
+- [ ] Duplicate form validation logic — OnboardingScreen and CreateSessionScreen each implement it separately
+- [ ] Notifications empty state — add "Host a session to get notified when players join" guidance
+- [ ] Session Card typePip too small — replace with text label
+
+## End of Session Checklist
+
+Before ending every session:
+1. `git status` to confirm no missing files
+2. `git add` new files → `git commit -m "..."` commit changes
+3. `git push` to GitHub
+4. Confirm push succeeded before telling user the session is done

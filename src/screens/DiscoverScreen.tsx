@@ -4,6 +4,7 @@ import {
   FlatList,
   StyleSheet,
   Text,
+  Pressable,
   ListRenderItem,
   RefreshControl,
 } from 'react-native';
@@ -31,23 +32,40 @@ function ItemSeparator() {
 
 export function DiscoverScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { sortedSessions, refreshSessions, user } = useSessions();
+  const { sortedSessions, refreshSessions, user, sessionError, clearSessionError } = useSessions();
   const [activeFilter, setActiveFilter] = useState<FilterOption>('All');
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLon, setUserLon] = useState<number | null>(null);
+  const [locationNote, setLocationNote] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<string | null>(null);
 
-  // Get user location once for distance calculation
+  // Get user location once for distance calculation and display
   useEffect(() => {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') return;
+        if (status !== 'granted') {
+          setLocationNote('Location access denied — distances unavailable');
+          return;
+        }
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         setUserLat(loc.coords.latitude);
         setUserLon(loc.coords.longitude);
-      } catch {}
+
+        const [place] = await Location.reverseGeocodeAsync({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+        if (place) {
+          const city = place.city || place.subregion || place.region || '';
+          const region = place.region || '';
+          setCurrentLocation(city && region && city !== region ? `${city}, ${region}` : city || region);
+        }
+      } catch {
+        setLocationNote('Could not get location — distances unavailable');
+      }
     })();
   }, []);
 
@@ -132,7 +150,7 @@ export function DiscoverScreen({ navigation }: Props) {
   const ListHeader = useMemo(
     () => (
       <>
-        <MapView sessions={filteredSessions} />
+        <MapView sessions={filteredSessions} userLat={userLat} userLon={userLon} />
 
         <View style={styles.filterSection}>
           <FilterChips activeFilter={activeFilter} onFilterChange={setActiveFilter} />
@@ -171,11 +189,23 @@ export function DiscoverScreen({ navigation }: Props) {
       <StatusBar style="light" />
 
       <TopBar
-        location={user?.location ?? 'Seattle, WA'}
+        location={currentLocation ?? user?.location ?? 'Locating...'}
         notificationCount={unreadCount}
         onBellPress={handleBellPress}
         onProfilePress={handleProfilePress}
       />
+
+      {sessionError && (
+        <Pressable onPress={clearSessionError} style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{sessionError}</Text>
+        </Pressable>
+      )}
+
+      {locationNote && !sessionError && (
+        <View style={styles.infoBanner}>
+          <Text style={styles.infoBannerText}>{locationNote}</Text>
+        </View>
+      )}
 
       <FlatList
         data={filteredSessions}
@@ -251,5 +281,25 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     paddingHorizontal: spacing.base,
+  },
+  errorBanner: {
+    backgroundColor: '#5C1A1A',
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+  },
+  errorBannerText: {
+    ...typography.caption,
+    color: '#FF8A8A',
+    textAlign: 'center',
+  },
+  infoBanner: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+  },
+  infoBannerText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });

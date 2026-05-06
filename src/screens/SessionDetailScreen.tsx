@@ -103,10 +103,6 @@ export function SessionDetailScreen({ route, navigation }: Props) {
     );
   }, [cancelSession, sessionId, navigation]);
 
-  const handleShare = useCallback(() => {
-    Alert.alert('Share', 'Sharing coming soon!');
-  }, []);
-
   if (!session) return null;
 
   const buttonState = loading ? 'loading' : isHost ? 'host' : joined ? 'joined' : isFull ? 'full' : 'join';
@@ -172,7 +168,6 @@ export function SessionDetailScreen({ route, navigation }: Props) {
         onJoin={handleJoin}
         onLeave={handleLeave}
         onCancel={handleCancel}
-        onShare={handleShare}
       />
     </View>
   );
